@@ -2,37 +2,258 @@
   "version": 2.0,
   "questions": [
     {
-      "question": "This is a Sample Question 1?",
+      "question": "What is the primary purpose of the NG Setup procedure?",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "To send user data packets through the N3 interface",
+        "b": "To establish the control plane connection between gNB and AMF",
+        "c": "To assign TEIDs for data tunnels",
+        "d": "To activate the UPF service"
       },
       "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+        "a": "Incorrect — N3 handles user-plane, not NG Setup.",
+        "b": "Correct — NG Setup initializes the control-plane link between gNB and AMF using NGAP.",
+        "c": "Incorrect — TEIDs are assigned during PDU session setup.",
+        "d": "Incorrect — UPF activation is unrelated to NG Setup."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which protocol is used in the NG-C interface?",
+      "answers": {
+        "a": "GTP-U",
+        "b": "NGAP",
+        "c": "HTTP",
+        "d": "FTP"
+      },
+      "explanations": {
+        "a": "Incorrect — GTP-U is for user-plane on N3.",
+        "b": "Correct — NGAP is the control-plane protocol used on NG-C between gNB and AMF.",
+        "c": "Incorrect — HTTP is not used for NG-C.",
+        "d": "Incorrect — FTP has no role in 5G signaling."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "NG Setup signaling runs over which transport protocol?",
+      "answers": {
+        "a": "TCP",
+        "b": "SCTP",
+        "c": "UDP",
+        "d": "FTP"
+      },
+      "explanations": {
+        "a": "Incorrect — TCP is not used in NGAP.",
+        "b": "Correct — NGAP runs over SCTP to ensure reliable signaling.",
+        "c": "Incorrect — UDP is used for GTP-U, not control signaling.",
+        "d": "Incorrect — FTP is unrelated."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The N3 interface connects the gNB to which core network function?",
+      "answers": {
+        "a": "AMF",
+        "b": "SMF",
+        "c": "UPF",
+        "d": "AUSF"
+      },
+      "explanations": {
+        "a": "Incorrect — AMF is signaling only.",
+        "b": "Incorrect — SMF is control plane.",
+        "c": "Correct — N3 carries user-plane traffic between gNB and UPF.",
+        "d": "Incorrect — AUSF handles authentication."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What protocol is used for user plane data transport over the N3 interface?",
+      "answers": {
+        "a": "NGAP",
+        "b": "GTP-U",
+        "c": "SCTP",
+        "d": "RLC"
+      },
+      "explanations": {
+        "a": "Incorrect — NGAP is signaling.",
+        "b": "Correct — GTP-U carries user-plane packets on N3.",
+        "c": "Incorrect — SCTP is a transport for NGAP.",
+        "d": "Incorrect — RLC is part of the RAN protocol stack."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which of the following identifies the PDU session in 5G?",
+      "answers": {
+        "a": "GTP-U",
+        "b": "TEID",
+        "c": "PDU Session ID",
+        "d": "PLMN Identity"
+      },
+      "explanations": {
+        "a": "Incorrect — GTP-U is a protocol.",
+        "b": "Incorrect — TEID identifies tunnels, not sessions.",
+        "c": "Correct — Each PDU session has a unique PDU Session ID.",
+        "d": "Incorrect — PLMN identifies operator."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In GTP-U, what does TEID stand for?",
+      "answers": {
+        "a": "Tunnel Endpoint Identifier",
+        "b": "Transmission Element ID",
+        "c": "Transport Entry ID",
+        "d": "Traffic Encryption ID"
+      },
+      "explanations": {
+        "a": "Correct — TEID identifies each GTP-U tunnel endpoint.",
+        "b": "Incorrect — Not used in GTP terminology.",
+        "c": "Incorrect — Made-up term.",
+        "d": "Incorrect — TEID does not relate to encryption."
       },
       "correctAnswer": "a",
       "difficulty": "beginner"
     },
     {
-      "question": "This is a Sample Question 2?",
+      "question": "What is a common port number used by GTP-U?",
       "answers": {
-        "a": "answer1",
-        "b": "answer2",
-        "c": "answer3",
-        "d": "answer4"
+        "a": "38412",
+        "b": "8080",
+        "c": "2152",
+        "d": "110"
       },
       "explanations": {
-        "a": "Explanation 1  <a href='www.google.com'>here</a>",
-        "b": "Explanation 2",
-        "c": "Explanation 2",
-        "d": "Explanation 2"
+        "a": "Incorrect — 38412 is SCTP for NGAP.",
+        "b": "Incorrect — 8080 is HTTP.",
+        "c": "Correct — GTP-U uses UDP port 2152.",
+        "d": "Incorrect — 110 is used for POP3 email."
       },
       "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The AMF is responsible for which type of plane?",
+      "answers": {
+        "a": "User Plane",
+        "b": "Control Plane",
+        "c": "Application Layer",
+        "d": "RLC Layer"
+      },
+      "explanations": {
+        "a": "Incorrect — UPF manages the user plane.",
+        "b": "Correct — AMF handles signaling, mobility, and registration.",
+        "c": "Incorrect — Applications are outside 5G Core functions.",
+        "d": "Incorrect — RLC is part of the RAN."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What is the main element exchanged in the NG Setup Request?",
+      "answers": {
+        "a": "S-NSSAI",
+        "b": "AMF Name",
+        "c": "Global RAN Node ID",
+        "d": "QoS Flow List"
+      },
+      "explanations": {
+        "a": "Incorrect — S-NSSAI relates to slicing.",
+        "b": "Incorrect — AMF Name is in the Response.",
+        "c": "Correct — gNB sends its Global RAN Node ID to identify itself.",
+        "d": "Incorrect — QoS flows appear during PDU session setup."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which component assigns the UL TEID during PDU session setup?",
+      "answers": {
+        "a": "AMF",
+        "b": "SMF",
+        "c": "UPF",
+        "d": "gNB"
+      },
+      "explanations": {
+        "a": "Incorrect — AMF does not assign TEIDs.",
+        "b": "Incorrect — SMF instructs UPF but does not generate TEIDs.",
+        "c": "Correct — UPF provides the UL TEID for uplink GTP-U tunneling.",
+        "d": "Incorrect — gNB uses TEIDs but does not allocate them."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The default paging DRX value in NG Setup is used for:",
+      "answers": {
+        "a": "Determining slice type",
+        "b": "Controlling paging intervals",
+        "c": "Setting TEID",
+        "d": "Allocating GUAMI"
+      },
+      "explanations": {
+        "a": "Incorrect — DRX has no relation to slicing.",
+        "b": "Correct — DRX defines how often the UE wakes to check paging messages.",
+        "c": "Incorrect — TEIDs are unrelated to DRX.",
+        "d": "Incorrect — GUAMI identifies AMF, not DRX."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The NG Setup Response contains which of the following?",
+      "answers": {
+        "a": "Global RAN Node ID",
+        "b": "UL TEID",
+        "c": "AMF Name",
+        "d": "PDU Session ID"
+      },
+      "explanations": {
+        "a": "Incorrect — That is sent by the gNB in the Request.",
+        "b": "Incorrect — TEIDs appear during PDU session setup.",
+        "c": "Correct — The AMF provides its AMF Name in the NG Setup Response.",
+        "d": "Incorrect — PDU Session ID is unrelated to NG Setup."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The NG-C interface typically uses which port number?",
+      "answers": {
+        "a": "80",
+        "b": "2123",
+        "c": "2152",
+        "d": "38412"
+      },
+      "explanations": {
+        "a": "Incorrect — Port 80 is HTTP.",
+        "b": "Incorrect — 2123 is GTP-C (LTE control).",
+        "c": "Incorrect — 2152 is GTP-U.",
+        "d": "Correct — SCTP over port 38412 is used for NGAP on NG-C."
+      },
+      "correctAnswer": "d",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What is the sequence after NG Setup and UE registration to enable user data flow?",
+      "answers": {
+        "a": "NG Reset",
+        "b": "PDU Session Setup",
+        "c": "NGAP Update",
+        "d": "AMF Authentication"
+      },
+      "explanations": {
+        "a": "Incorrect — NG Reset is used for clearing state.",
+        "b": "Correct — After registration, PDU Session Setup is required to establish N3 tunnels for data flow.",
+        "c": "Incorrect — NGAP Update is not part of data activation flow.",
+        "d": "Incorrect — AMF authentication happens before registration completes."
+      },
+      "correctAnswer": "b",
       "difficulty": "beginner"
     }
   ]
