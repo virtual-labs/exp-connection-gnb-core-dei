@@ -1,0 +1,856 @@
+<!DOCTYPE html><html lang="en"><head>
+      <!--Google Tag Manager-->
+      <script class="gtm">
+        var dataLayer = [{
+        'labName': 'Virtual Lab',
+        'discipline': 'Test',
+        'college': 'DLBG',
+        'phase': 'Testing',
+        'expName': 'IMPLEMENT CONNECTION OF GNB TO CORE NETWORK',
+        'expShortName': 'connection-gnb-core'
+        }];
+    
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&amp;l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-5NMQ9NQ');
+      </script>
+      <!--End Google Tag Manager-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="" name="description">
+    <meta content="" name="author">
+    
+    	<meta name="experiment-short-name" content="connection-gnb-core">
+    	<meta name="developer-institute" content="DLBG">
+    	<meta name="learning-unit" content="IMPLEMENT CONNECTION OF GNB TO CORE NETWORK">
+    	<meta name="task-name" content="Theory">
+    
+    <!-- For iPhone -->
+    <meta name="msapplication-TileColor" content="#4076e0">
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#4076e0">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#4076e0">
+    <title>Virtual Labs</title>
+    <link rel="shortcut icon" href="./assets/images/favicon.ico">
+    <link rel="stylesheet" href="./assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css" integrity="sha512-Oy18vBnbSJkXTndr2n6lDMO5NN31UljR8e/ICzVPrGpSud4Gkckb8yUpqhKuUNoE+o9gAb4O/rAxxw1ojyUVzg==" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&amp;family=Raleway&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./assets/css/github-markdown.min.css">
+    <link rel="stylesheet" href="./assets/css/vlabs-style.css">
+    <link rel="stylesheet" href="./assets/css/toast.css">
+    <link rel="stylesheet" href="./assets/katex_assets/katex.min.css">
+    
+    <script src="./assets/js/jquery-3.4.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js" integrity="sha384-q2kxQ16AaE6UbzuKqyBE9/u/KzioAlnx2maXQHiDX9d4/zp8Ok3f+M7DPm+Ib6IU" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.min.js" integrity="sha384-pQQkAEnwaBkjpqZ8RU1fF1AKtTcHJwFl3pblpTlHXybJjHpMYo79HY3hIi4NKxyj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      h1 {
+      font-size: 1.8rem;
+      }
+      h2 {
+      font-size: 1.4rem;
+      }
+      h3 {
+      font-size: 1.2rem;
+      }
+
+      h2, h3 {
+      font-weight: 800;
+      }
+    </style>
+    
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css"></head>
+  <body class="p-0 container-fluid vlabs-page d-flex flex-column justify-content-between">
+      <!--Google Tag Manager (noscript)-->
+      <noscript class="gtm">
+        <iframe height="0" src="https://www.googletagmanager.com/ns.html?id=GTM-5NMQ9NQ" style="display:none;visibility:hidden" width="0">
+        </iframe>
+      </noscript>
+      <!--End Google Tag Manager (noscript)-->
+  
+      <header class="vlabs-header sticky-top bg-white">
+        <nav class="p-0 navbar navbar-light d-flex align-items-stretch">
+          
+          <button class="navbar-toggler px-4" type="button" onclick="toggle()">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+      
+          <div class="d-flex justify-content-center">        
+            <a href="https://vlab.co.in" class="navbar-brand">
+              <img src="./assets/images/vlabs-color-small-moe.jpg" alt="vlabs logo" class="vlabs-logo">
+            </a>
+          </div>
+          
+          <div id="headerNavbar" class="d-none border-top flex-grow-1 d-lg-flex align-items-center justify-content-end">
+            <div class="svc-rating-display">
+                <rating-display spreadsheetid="1x12nhpp0QvnsA6x-O1sV4IA9SAbfVsq_wiexWkutOmU" sheetname="Experiment-Database" columnname="Experiment Short Name" columnvalue="connection-gnb-core" imagesdirectory="/plugins/svc-rating/images/">
+                </rating-display>
+            </div>      <div class="svc-rating-submit">
+                <rating-submit title="Rate" this="" experiment="">
+                </rating-submit>
+            </div>      <bug-report id="bug-report" title="[BUG REPORT] IMPLEMENT CONNECTION OF GNB TO CORE NETWORK" page-type="text" context-info="{&quot;organisation&quot;:&quot;Virtual Labs&quot;,&quot;developer_institute&quot;:&quot;DLBG&quot;,&quot;expname&quot;:&quot;IMPLEMENT CONNECTION OF GNB TO CORE NETWORK&quot;,&quot;labname&quot;:&quot;Virtual Lab&quot;,&quot;phase&quot;:&quot;Testing&quot;}" checkbox-json="{&quot;text&quot;:[&quot;Insufficient Content&quot;],&quot;video&quot;:[&quot;Insufficient Content&quot;],&quot;assesment&quot;:[&quot;Incorrect Options&quot;,&quot;Incorrect Answer&quot;,&quot;Incorrect Question&quot;],&quot;assessment&quot;:[&quot;Incorrect Options&quot;,&quot;Incorrect Answer&quot;,&quot;Incorrect Question&quot;],&quot;simulation&quot;:[&quot;Simulation Not Working&quot;,&quot;Incorrect Results/Observations&quot;,&quot;Insufficient/Incorrect Instructions&quot;],&quot;DEFAULT&quot;:[&quot;Page Not Loading&quot;,&quot;Content Not Visible&quot;,&quot;Incorrect Content&quot;]}" button_style="border: none; color: #fff; background-color: #288ec8; text-align: center; font-size: 1.05rem; border-radius: 1em;padding: 0.6em 1.2em; margin: 0 10px" position="override" custom_button_class="v-button"></bug-report>
+          </div>
+        </nav>
+      </header>
+      <div class="container-fluid flex-fill d-flex flex-column vlabs-page-main">
+        <div class="row d-flex justify-content-between">
+          <div class="flex-column">
+          <div class="row py-4 px-4 breadcrumbs">
+          	<div class="title is-4 tools">Tools</div>
+          	<span class="mx-2">
+          		<i aria-hidden="true" class="fa fa-angle-right"></i>
+          	</span>
+          	<a href="performance-report.html" class="my-2 mx-3" target="_blank">
+          		<button class="v-button">Performance Tool</button>
+          	</a>
+          	<a href="validator-report.html" class="my-2 mx-3" target="_blank">
+          		<button class="v-button">Validation Tool</button>
+          	</a>
+          </div>
+          </div>
+        </div>
+        <div class="row flex-grow-1 d-flex flex-nowrap flex-column flex-lg-row">
+          <div class="modal fade popupmenu" id="popupMenu" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                  <div class="modal-content">
+                      <div class="modal-header">
+                          <h5 class="modal-title" id="exampleModalLabel">
+                              <a href="https://vlab.co.in" class="navbar-brand">
+                                  <img src="./assets/images/vlabs-color-small-moe.jpg" alt="vlabs logo" class="vlabs-logo">
+                              </a>
+                          </h5>
+                          <button type="button" class="btn-close align-self-center" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body nav-menu">
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="index.html" class="p-2 ">
+                                      Aim
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="theory.html" class="p-2  current-item ">
+                                      Theory
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="pretest.html" class="p-2 ">
+                                      Pretest
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="procedure.html" class="p-2 ">
+                                      Procedure
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="simulation.html" class="p-2 ">
+                                      Simulation
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="posttest.html" class="p-2 ">
+                                      Posttest
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="references.html" class="p-2 ">
+                                      References
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="contributors.html" class="p-2 ">
+                                      Contributors
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                              <div>
+                                  <div class="d-flex nav-menu-body">
+                                      <a href="feedback.html" class="p-2 ">
+                                      Feedback
+                                      </a>
+                                      
+                                  </div>
+                                  <div id="t-" class="collapse">
+                                      <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                                      </div>
+                                  </div>
+                              </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="nav flex-column sidebar nav-menu flex-shrink-0 px-lg-4 align-items-center align-items-lg-start hidden d-none d-lg-flex" id="menu">
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="index.html" class="p-2 ">
+                        Aim
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="theory.html" class="p-2  current-item ">
+                        Theory
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="pretest.html" class="p-2 ">
+                        Pretest
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="procedure.html" class="p-2 ">
+                        Procedure
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="simulation.html" class="p-2 ">
+                        Simulation
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="posttest.html" class="p-2 ">
+                        Posttest
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="references.html" class="p-2 ">
+                        References
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="contributors.html" class="p-2 ">
+                        Contributors
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="d-flex nav-menu-body">
+                        <a href="feedback.html" class="p-2 ">
+                        Feedback
+                        </a>
+                        
+                    </div>
+                    <div id="t-" class="collapse">
+                        <div class="px-3 d-flex flex-column tasks align-items-center align-items-lg-start">
+                        </div>
+                    </div>
+                </div>
+          </div>          <div class="vlabs-page-content px-5 pb-4 flex-grow-1 markdown-body">
+            <div class="text-center fix-spacing">
+              <h2 id="implement-connection-of-gnb-to-core-network">Implement Connection of gNB to Core Network</h2>
+          
+            </div>
+              <h2 id="1-introduction">1. Introduction</h2>
+          <p>The 5G New Radio (NR) system requires proper connectivity between the Radio Access Network (RAN) and the 5G Core Network (5GC). This experiment focuses on two fundamental procedures:</p>
+          <ul>
+          <li><strong>NG Setup Procedure</strong>: Establishes the control plane connection between gNodeB (gNB) and Access and Mobility Management Function (AMF)</li>
+          <li><strong>N3 Interface Activation</strong>: Enables user plane data transmission between gNB and User Plane Function (UPF)</li>
+          </ul>
+          <hr>
+          <h2 id="2-5g-system-architecture-overview">2. 5G System Architecture Overview</h2>
+          <h3 id="21-network-components">2.1 Network Components</h3>
+          <p><strong>NG-RAN (Next Generation Radio Access Network):</strong></p>
+          <ul>
+          <li>gNodeB (gNB): Provides radio coverage and interfaces with 5G core</li>
+          </ul>
+          <p><strong>5GC (5G Core Network):</strong></p>
+          <ul>
+          <li>AMF: Handles mobility and connection management</li>
+          <li>UPF: Routes and forwards user data packets</li>
+          <li>SMF: Manages PDU sessions</li>
+          </ul>
+          <img src="images/fig1.svg" alt="5G System Architecture" width="45%">
+          
+          <p><em>Fig: 5G System Architecture - NG Setup and N3 Interface</em></p>
+          <h3 id="22-ng-interface-components">2.2 NG Interface Components</h3>
+          <p><strong>NG-C (NG Control Plane):</strong></p>
+          <ul>
+          <li>Connects gNB to AMF</li>
+          <li>Uses NGAP (NG Application Protocol)</li>
+          <li>Carries control/signaling messages</li>
+          </ul>
+          <p><strong>NG-U / N3 (NG User Plane):</strong></p>
+          <ul>
+          <li>Connects gNB to UPF</li>
+          <li>Uses GTP-U (GPRS Tunneling Protocol - User Plane)</li>
+          <li>Carries actual user data</li>
+          </ul>
+          <img src="images/fig2.svg" alt="NG Interface Components" width="45%">
+          
+          <p><em>Fig: NG Interface Components</em></p>
+          <hr>
+          <details>
+          <summary><strong>3. NG Setup Procedure</strong></summary>
+          
+          <h2 id="3-ng-setup-procedure">3. NG Setup Procedure</h2>
+          <h3 id="31-purpose">3.1 Purpose</h3>
+          <p>The NG Setup procedure is the first signaling exchange between gNB and AMF that establishes control plane connectivity.</p>
+          <ul>
+          <li>Exchange identities between gNB and AMF</li>
+          <li>Share supported capabilities and network slices</li>
+          <li>Verify service area compatibility</li>
+          <li>Enable UE connection handling</li>
+          </ul>
+          <h3 id="32-ng-setup-message-flow">3.2 NG Setup Message Flow</h3>
+          <img src="images/fig3.svg" alt="NG Setup Procedure Sequence" width="45%">
+          
+          <p><em>Fig: NG Setup Procedure Sequence</em></p>
+          <p><strong>Process Steps:</strong></p>
+          <ul>
+          <li>SCTP association established between gNB and AMF</li>
+          <li>gNB sends NG SETUP REQUEST</li>
+          <li>AMF validates the request</li>
+          <li>AMF sends NG SETUP RESPONSE (or FAILURE)</li>
+          <li>NGAP connection is active</li>
+          </ul>
+          <h3 id="33-ng-setup-request-message">3.3 NG Setup Request Message</h3>
+          <p><strong>Key Information Elements:</strong></p>
+          <ol>
+          <li><p><strong>Global RAN Node ID</strong></p>
+          <ul>
+          <li>PLMN Identity: MCC + MNC (e.g., '00F110'H for MCC=001, MNC=01)</li>
+          <li>gNB ID: Unique identifier (e.g., '0012345'H)</li>
+          </ul>
+          </li>
+          <li><p><strong>Supported TA List</strong></p>
+          <ul>
+          <li>TAC (Tracking Area Code): e.g., '000064'H (TAC=100)</li>
+          <li>Broadcast PLMN List</li>
+          <li>TAI Slice Support List (S-NSSAI with SST)<ul>
+          <li>SST (Slice/Service Type): e.g., '01'H for eMBB</li>
+          </ul>
+          </li>
+          </ul>
+          </li>
+          <li><p><strong>Default Paging DRX</strong></p>
+          <ul>
+          <li>Values: v32, v64, v128, v256 (radio frames)</li>
+          <li>Example: v128 = check paging every 1.28 seconds</li>
+          </ul>
+          </li>
+          <li><p><strong>RAN Node Name</strong></p>
+          <ul>
+          <li>Human-readable identifier (e.g., "gnb0012345")</li>
+          </ul>
+          </li>
+          </ol>
+          <p><strong>Example:</strong></p>
+          <pre><code>NG SETUP REQUEST
+          {
+              Global RAN Node ID:
+              {
+                  PLMN Identity: 00101
+                  gNB ID: 0012345
+              }
+              
+              Supported TA List:
+              {
+                  TAC: 000064
+                  S-NSSAI: { SST: 01 }
+              }
+              
+              Default Paging DRX: v128
+          }
+          </code></pre>
+          <h3 id="34-ng-setup-response-message">3.4 NG Setup Response Message</h3>
+          <p><strong>Key Information Elements:</strong></p>
+          <ol>
+          <li><p><strong>AMF Name</strong></p>
+          <ul>
+          <li>FQDN format: "amarisoft.amf.5gc.mnc001.mcc001.3gppnetwork.org"</li>
+          </ul>
+          </li>
+          <li><p><strong>Served GUAMI List</strong></p>
+          <ul>
+          <li>GUAMI components:<ul>
+          <li>PLMN Identity</li>
+          <li>AMF Region ID: e.g., '80'H (128 decimal)</li>
+          <li>AMF Set ID: e.g., 4</li>
+          <li>AMF Pointer: e.g., 1</li>
+          </ul>
+          </li>
+          </ul>
+          </li>
+          <li><p><strong>Relative AMF Capacity</strong></p>
+          <ul>
+          <li>Value: 0-255 (higher = greater capacity)</li>
+          <li>Used for load balancing</li>
+          </ul>
+          </li>
+          <li><p><strong>PLMN Support List</strong></p>
+          <ul>
+          <li>Supported PLMNs and network slices</li>
+          <li>Must overlap with gNB's capabilities</li>
+          </ul>
+          </li>
+          </ol>
+          <p><strong>Example:</strong></p>
+          <pre><code>NG SETUP RESPONSE
+          {
+              AMF Name: "amarisoft.amf.5gc.mnc001.mcc001.3gppnetwork.org"
+              
+              Served GUAMI List:
+              {
+                  PLMN Identity: 00101
+                  AMF Region ID: 128
+                  AMF Set ID: 4
+                  AMF Pointer: 1
+              }
+              
+              Relative AMF Capacity: 50
+              
+              PLMN Support List:
+              {
+                  PLMN Identity: 00F110
+                  S-NSSAI: { SST: 01 }
+              }
+          }
+          </code></pre>
+          <h3 id="35-ngap-protocol-stack">3.5 NGAP Protocol Stack</h3>
+          <img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
+          
+          <p><em>Figu: NGAP Protocol Stack</em></p>
+          <p><strong>Layers:</strong></p>
+          <ul>
+          <li><strong>NGAP</strong>: Application layer for NG-C signaling</li>
+          <li><strong>SCTP</strong>: Reliable transport (Port 38412)</li>
+          <li><strong>IP</strong>: Network layer routing</li>
+          <li><strong>Ethernet</strong>: Physical connectivity</li>
+          </ul>
+          <hr>
+          </details>
+          
+          
+          <details>
+          <summary><strong>4. N3 Interface and ActivationNG Setup Procedure</strong></summary>
+          ## 4. N3 Interface and Activation
+          
+          <h3 id="41-n3-interface-overview">4.1 N3 Interface Overview</h3>
+          <p>The N3 interface is the user plane interface between gNB and UPF.</p>
+          <p><strong>Purpose:</strong></p>
+          <ul>
+          <li>Carries user data between UE and Data Networks</li>
+          <li>Uses GTP-U tunneling protocol</li>
+          <li>Operates independently of control plane</li>
+          </ul>
+          <p><strong>Key Characteristics:</strong></p>
+          <ul>
+          <li>Tunnel-based using TEIDs (Tunnel Endpoint Identifiers)</li>
+          <li>Bidirectional (uplink and downlink)</li>
+          <li>Separate tunnel for each PDU session</li>
+          </ul>
+          <img src="images/fig5.svg" alt="N3 Interface Position in 5G Network" width="45%">
+          
+          <p><em>Fig: N3 Interface Position in 5G Network</em></p>
+          <h3 id="42-n3-activation-through-pdu-session-setup">4.2 N3 Activation Through PDU Session Setup</h3>
+          <p>N3 activation occurs during PDU Session Resource Setup.</p>
+          <img src="images/fig6.svg" alt="N3 Activation via PDU Session Setup" width="45%">
+          
+          <p><em>Fig: N3 Activation via PDU Session Setup</em></p>
+          <h3 id="43-pdu-session-resource-setup-request">4.3 PDU Session Resource Setup Request</h3>
+          <p><strong>Key Information Elements:</strong></p>
+          <ol>
+          <li><p><strong>PDU Session ID</strong></p>
+          <ul>
+          <li>Unique identifier (0-255), e.g., PDU Session ID = 1</li>
+          </ul>
+          </li>
+          <li><p><strong>S-NSSAI</strong></p>
+          <ul>
+          <li>Network slice identifier (SST: '01'H)</li>
+          </ul>
+          </li>
+          <li><p><strong>UL NG-U UP TNL Information</strong></p>
+          <ul>
+          <li>UPF IP Address: e.g., 10.0.0.162</li>
+          <li>Uplink TEID: e.g., 4f485cc3</li>
+          <li>gNB uses these to send uplink data to UPF</li>
+          </ul>
+          </li>
+          <li><p><strong>PDU Session Type</strong></p>
+          <ul>
+          <li>IPv4, IPv6, or Ethernet</li>
+          </ul>
+          </li>
+          <li><p><strong>QoS Flow Setup Request List</strong></p>
+          <ul>
+          <li>QFI (QoS Flow Identifier): e.g., 1</li>
+          <li>5QI: e.g., 9 (default bearer)</li>
+          </ul>
+          </li>
+          </ol>
+          <p><strong>Example:</strong></p>
+          <pre><code>PDU SESSION RESOURCE SETUP REQUEST
+          {
+              PDU Session ID: 1
+              S-NSSAI: { SST: 01 }
+              
+              UL NG-U UP TNL Information:       ← N3 UPLINK TUNNEL
+              {
+                  Transport Layer Address: 10.0.0.162  (UPF IP)
+                  GTP-TEID: 4f485cc3                   (UL TEID)
+              }
+              
+              PDU Session Type: IPv4
+              
+              QoS Flow: { QFI: 1, 5QI: 9 }
+          }
+          </code></pre>
+          <h3 id="44-pdu-session-resource-setup-response">4.4 PDU Session Resource Setup Response</h3>
+          <p><strong>Key Information Elements:</strong></p>
+          <ol>
+          <li><p><strong>DL QoS Flow Per TNL Information</strong></p>
+          <ul>
+          <li>gNB IP Address: e.g., 10.0.0.185</li>
+          <li>Downlink TEID: e.g., a968d0db</li>
+          <li>UPF uses these to send downlink data to gNB</li>
+          </ul>
+          </li>
+          <li><p><strong>Associated QoS Flow List</strong></p>
+          <ul>
+          <li>Successfully established flows (e.g., QFI=1)</li>
+          </ul>
+          </li>
+          </ol>
+          <p><strong>Example:</strong></p>
+          <pre><code>PDU SESSION RESOURCE SETUP RESPONSE
+          {
+              PDU Session ID: 1
+              
+              DL QoS Flow Per TNL Information:   ← N3 DOWNLINK TUNNEL
+              {
+                  Transport Layer Address: 10.0.0.185  (gNB IP)
+                  GTP-TEID: a968d0db                   (DL TEID)
+              }
+              
+              Associated QoS Flow List: { QFI: 1 }
+          }
+          </code></pre>
+          <p><strong>Result:</strong> N3 tunnel is now fully configured for bidirectional data flow.</p>
+          <h3 id="45-n3-protocol-stack">4.5 N3 Protocol Stack</h3>
+          <img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="45%">
+          
+          <p><em>Fig: N3 Interface Protocol Stack</em></p>
+          <p><strong>Layers:</strong></p>
+          <ul>
+          <li><strong>User Data</strong>: User IP packets</li>
+          <li><strong>GTP-U</strong>: Tunneling protocol with TEID</li>
+          <li><strong>UDP</strong>: Port 2152</li>
+          <li><strong>IP</strong>: Source/Destination addressing</li>
+          <li><strong>Ethernet</strong>: Physical transport</li>
+          </ul>
+          <h3 id="46-n3-data-flow">4.6 N3 Data Flow</h3>
+          <h4 id="461-uplink-flow-ue-→-data-network">4.6.1 Uplink Flow (UE → Data Network)</h4>
+          <img src="images/fig8.svg" alt="Uplink Data Flow Through N3" width="45%">
+          
+          <p><em>Fig: Uplink Data Flow Through N3</em></p>
+          <p><strong>Steps:</strong></p>
+          <ol>
+          <li>UE sends IP packet (e.g., to 8.8.8.8)</li>
+          <li>gNB receives on radio interface</li>
+          <li>gNB encapsulates with GTP-U:<ul>
+          <li>[Outer IP: gNB (10.0.0.185) → UPF (10.0.0.162)]</li>
+          <li>[UDP: Port 2152]</li>
+          <li>[GTP-U Header: UL TEID = 4f485cc3]</li>
+          <li>[Inner IP Packet: UE → 8.8.8.8]</li>
+          </ul>
+          </li>
+          <li>Packet transmitted over N3 interface</li>
+          <li>UPF decapsulates (removes outer headers)</li>
+          <li>UPF forwards to Data Network</li>
+          </ol>
+          <h4 id="462-downlink-flow-data-network-→-ue">4.6.2 Downlink Flow (Data Network → UE)</h4>
+          <img src="images/fig9.svg" alt="Downlink Data Flow Through N3" width="45%">
+          
+          <p><em>Fig: Downlink Data Flow Through N3</em></p>
+          <p><strong>Steps:</strong></p>
+          <ol>
+          <li>Data Network sends response (e.g., from 8.8.8.8)</li>
+          <li>UPF receives packet</li>
+          <li>UPF encapsulates with GTP-U:<ul>
+          <li>[Outer IP: UPF (10.0.0.162) → gNB (10.0.0.185)]</li>
+          <li>[UDP: Port 2152]</li>
+          <li>[GTP-U Header: DL TEID = a968d0db]</li>
+          <li>[Inner IP Packet: 8.8.8.8 → UE]</li>
+          </ul>
+          </li>
+          <li>Packet transmitted over N3 interface</li>
+          <li>gNB decapsulates (removes outer headers)</li>
+          <li>gNB forwards to UE over radio</li>
+          </ol>
+          <p><strong>Key Fields:</strong></p>
+          <ul>
+          <li><strong>Version</strong>: 001 (GTP version 1)</li>
+          <li><strong>Message Type</strong>: 255 for user data (G-PDU)</li>
+          <li><strong>TEID (32 bits)</strong>: Most critical field<ul>
+          <li>Uplink: UL TEID assigned by UPF</li>
+          <li>Downlink: DL TEID assigned by gNB</li>
+          <li>Used to identify PDU session</li>
+          </ul>
+          </li>
+          </ul>
+          <hr>
+          </details>
+          
+          <details>
+          <summary><strong>5. Relationship Between NG Setup and N3</strong></summary>
+          ## 5. Relationship Between NG Setup and N3
+          
+          <h3 id="51-dependency">5.1 Dependency</h3>
+          <img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="45%">
+          
+          <p><em>Fig: NG Setup to N3 Activation Flow</em></p>
+          <p><strong>Key Points:</strong></p>
+          <ul>
+          <li>NG Setup is prerequisite: Must complete before N3 can be activated</li>
+          <li>Different protocols: NG Setup uses NGAP, N3 uses GTP-U</li>
+          <li>Different endpoints: NG Setup (gNB-AMF), N3 (gNB-UPF)</li>
+          <li>One-to-many: One NG Setup supports multiple N3 tunnels</li>
+          </ul>
+          <h3 id="52-complete-call-flow">5.2 Complete Call Flow</h3>
+          <ol>
+          <li><p><strong>Network Setup Phase</strong></p>
+          <ul>
+          <li>Physical connectivity established</li>
+          <li>SCTP association created</li>
+          <li>NG Setup Request/Response exchanged</li>
+          <li>NG-C interface ready</li>
+          </ul>
+          </li>
+          <li><p><strong>UE Attachment Phase</strong></p>
+          <ul>
+          <li>UE registration via NGAP</li>
+          <li>Authentication and security</li>
+          </ul>
+          </li>
+          <li><p><strong>N3 Activation Phase</strong></p>
+          <ul>
+          <li>PDU Session requested</li>
+          <li>Setup Request with UL tunnel info (UPF IP, UL TEID)</li>
+          <li>Setup Response with DL tunnel info (gNB IP, DL TEID)</li>
+          <li>N3 tunnels active</li>
+          </ul>
+          </li>
+          <li><p><strong>Data Communication</strong></p>
+          <ul>
+          <li>User data flows: UE ↔ gNB ↔ N3 ↔ UPF ↔ Data Network</li>
+          </ul>
+          </li>
+          </ol>
+          <hr>
+          </details>
+          
+          <details>
+          <summary><strong>6. Summary</strong></summary>
+          ## 6. Summary
+          
+          <h3 id="61-ng-setup">6.1 NG Setup</h3>
+          <p><strong>Purpose:</strong> Establish control plane connectivity (gNB ↔ AMF)</p>
+          <p><strong>Key Messages:</strong></p>
+          <ul>
+          <li>NG Setup Request: Global RAN Node ID, Supported TAs, Paging DRX</li>
+          <li>NG Setup Response: AMF Name, GUAMI List, PLMN Support List</li>
+          </ul>
+          <p><strong>Protocol:</strong> NGAP/SCTP/IP (Port 38412)</p>
+          <h3 id="62-n3-interface">6.2 N3 Interface</h3>
+          <p><strong>Purpose:</strong> Carry user plane data (gNB ↔ UPF)</p>
+          <p><strong>Activation:</strong> PDU Session Resource Setup procedure</p>
+          <p><strong>Key Parameters:</strong></p>
+          <ul>
+          <li>Request: UPF IP + Uplink TEID</li>
+          <li>Response: gNB IP + Downlink TEID</li>
+          </ul>
+          <p><strong>Protocol:</strong> GTP-U/UDP/IP (Port 2152)</p>
+          <h3 id="63-importance">6.3 Importance</h3>
+          <ul>
+          <li><strong>NG Setup</strong>: Foundation for all signaling; enables UE connection</li>
+          <li><strong>N3 Interface</strong>: Carries actual user traffic; impacts user experience</li>
+          <li><strong>Together</strong>: Enable complete 5G connectivity (control + data)</li>
+          </ul>
+          <hr>
+          </details>
+          </div>
+          <div class="bug-report-mobile">
+              <bug-report id="bug-report" title="[BUG REPORT] IMPLEMENT CONNECTION OF GNB TO CORE NETWORK" page-type="text" context-info="{&quot;organisation&quot;:&quot;Virtual Labs&quot;,&quot;developer_institute&quot;:&quot;DLBG&quot;,&quot;expname&quot;:&quot;IMPLEMENT CONNECTION OF GNB TO CORE NETWORK&quot;,&quot;labname&quot;:&quot;Virtual Lab&quot;,&quot;phase&quot;:&quot;Testing&quot;}" checkbox-json="{&quot;text&quot;:[&quot;Insufficient Content&quot;],&quot;video&quot;:[&quot;Insufficient Content&quot;],&quot;assesment&quot;:[&quot;Incorrect Options&quot;,&quot;Incorrect Answer&quot;,&quot;Incorrect Question&quot;],&quot;assessment&quot;:[&quot;Incorrect Options&quot;,&quot;Incorrect Answer&quot;,&quot;Incorrect Question&quot;],&quot;simulation&quot;:[&quot;Simulation Not Working&quot;,&quot;Incorrect Results/Observations&quot;,&quot;Insufficient/Incorrect Instructions&quot;],&quot;DEFAULT&quot;:[&quot;Page Not Loading&quot;,&quot;Content Not Visible&quot;,&quot;Incorrect Content&quot;]}" position="override" button_style="
+                          position: fixed; 
+                          bottom: 20px;
+                          right: 20px;
+                          z-index: 1;
+                          font-size: 0;
+                          padding: 25px;
+                          border-radius: 50%;
+                          border: none;
+                          background-color: #0fc0ff;
+                          background-image: url(data:image/png;base64,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);
+                          background-repeat: no-repeat;
+                          background-position: center;
+                          background-size: 30px;
+                          filter: invert(1);">
+              </bug-report>
+          </div>        </div>
+      </div>
+      <footer class="text-light pt-2 vlabs-footer d-flex flex-column">
+        <div class="row px-5 mx-0">
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Community Links</span>
+            <a href="https://www.sakshat.ac.in/" class="text-light">Sakshat Portal</a>
+            <a href="http://outreach.vlabs.ac.in/" class="text-light">Outreach Portal</a>
+            <a href="https://vlab.co.in/faq" class="text-light">FAQ: Virtual Labs</a>
+          </div>
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Contact Us</span>
+            <span> Phone: General Information: 011-26582050 </span>
+            <span> Email: support@vlabs.ac.in </span>
+          </div>
+          <div class="col d-flex flex-column">
+            <span class="font-weight-bold vlabs-footer-sect-name pb-2 mb-3">Follow Us</span>
+            <div class="social-links">
+      	<a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #55acee;" href="https://twitter.com/TheVirtualLabs">
+      	  <i class="fab fa-twitter"></i>
+      	</a>
+      	<a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #3b5998;" href="https://www.facebook.com/Virtual-Labs-IIT-Delhi-301510159983871/">
+      	  <i class="fab fa-facebook"></i>
+      	</a>
+      	<a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #e52d27;" href="https://www.youtube.com/watch?v=asxRaOgk6a0">
+      	  <i class="fab fa-youtube"></i>
+      	</a>
+      	<a class="p-2 mt-1 mr-2 d-inline-flex justify-content-center align-items-center" style="background: #2867B2;" href="https://in.linkedin.com/in/virtual-labs-008ba9136">
+      	  <i class="fab fa-linkedin"></i>
+      	</a>
+            </div>
+          </div>
+        </div>
+        <div class="m-0 py-2 text-center" style="font-family: &quot;Open Sans&quot;, sans-serif; background: #212121;">
+          <a class="text-primary font-weight-bold" href="https://www.gnu.org/licenses/agpl-3.0.en.html"> AGPL 3.0 </a>
+          &nbsp;&amp;&nbsp;
+          <a class="text-primary font-weight-bold" href="https://creativecommons.org/licenses/by-nc-sa/4.0/"> Creative Commons (CC BY-NC-SA 4.0) </a>
+        </div>
+      </footer>
+    <script src="./assets/js/toggleSidebar.js"></script>
+    <script src="./assets/js/event-handler.js"></script>
+
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register("sw.js");
+        });
+      }
+    </script>
+  
+
+<script type="module" src="https://cdn.vlabs.ac.in/bug-report/vlabs-bug-report.js"></script><script type="module" src="/exp-connection-gnb-core-dei/plugins/svc-rating/index.js"></script><script type="module" src="/exp-connection-gnb-core-dei/plugins/svc-rating/config.js"></script><script type="module" src="https://apis.google.com/js/api.js"></script></body></html>

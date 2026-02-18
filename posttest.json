@@ -1,0 +1,260 @@
+{
+  "version": 2.0,
+  "questions": [
+    {
+      "question": "Which protocol performs the first signaling exchange between the gNB and AMF during the NG Setup procedure?",
+      "answers": {
+        "a": "GTP-U",
+        "b": "NGAP",
+        "c": "SCTP",
+        "d": "IPsec"
+      },
+      "explanations": {
+        "a": "Incorrect — GTP-U carries user-plane traffic, not signaling.",
+        "b": "Correct — NGAP (Next Generation Application Protocol) handles signaling between gNB and AMF during NG Setup.",
+        "c": "Incorrect — SCTP is the transport layer, not the signaling protocol itself.",
+        "d": "Incorrect — IPsec provides security but not signaling."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Before sending the NG Setup Request, what must be established between the gNB and AMF?",
+      "answers": {
+        "a": "UDP association",
+        "b": "GTP-U tunnel",
+        "c": "SCTP association",
+        "d": "TCP handshake"
+      },
+      "explanations": {
+        "a": "Incorrect — UDP is not used for NGAP signaling.",
+        "b": "Incorrect — GTP-U is for user-plane data, not control signaling.",
+        "c": "Correct — SCTP association must be established for NGAP messages between gNB and AMF.",
+        "d": "Incorrect — NGAP does not use TCP."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which field in the NG Setup Request identifies the tracking location of the gNB?",
+      "answers": {
+        "a": "GUAMI",
+        "b": "TAC",
+        "c": "DRX",
+        "d": "QFI"
+      },
+      "explanations": {
+        "a": "Incorrect — GUAMI identifies the AMF region, not the gNB location.",
+        "b": "Correct — TAC (Tracking Area Code) defines the location tracking area for the gNB.",
+        "c": "Incorrect — DRX defines paging cycles.",
+        "d": "Incorrect — QFI is used for QoS flows."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The NG Setup Response message contains which of the following to identify the core network’s identity and region?",
+      "answers": {
+        "a": "PLMN Identity",
+        "b": "S-NSSAI",
+        "c": "GUAMI",
+        "d": "TEID"
+      },
+      "explanations": {
+        "a": "Incorrect — PLMN identifies the operator, not the AMF region.",
+        "b": "Incorrect — S-NSSAI identifies a network slice.",
+        "c": "Correct — GUAMI uniquely identifies the AMF region and instance within the core network.",
+        "d": "Incorrect — TEID is used in GTP-U for data tunnels."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What is the primary purpose of the N3 interface?",
+      "answers": {
+        "a": "Authentication of UE",
+        "b": "Control plane signaling",
+        "c": "User plane data transfer",
+        "d": "Paging management"
+      },
+      "explanations": {
+        "a": "Incorrect — Authentication is handled via N1/N2 interfaces.",
+        "b": "Incorrect — Control signaling is carried over N2.",
+        "c": "Correct — N3 carries user-plane data between gNB and UPF using GTP-U.",
+        "d": "Incorrect — Paging is part of control plane signaling."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which port does GTP-U use for transporting user plane packets?",
+      "answers": {
+        "a": "38412",
+        "b": "2152",
+        "c": "8080",
+        "d": "110"
+      },
+      "explanations": {
+        "a": "Incorrect — 38412 is used for SCTP in NGAP signaling.",
+        "b": "Correct — GTP-U uses UDP port 2152 for user-plane traffic.",
+        "c": "Incorrect — 8080 is a standard HTTP port.",
+        "d": "Incorrect — 110 is used for POP3 email service."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The Tunnel Endpoint Identifier (TEID) is used to:",
+      "answers": {
+        "a": "Specify UE identity",
+        "b": "Identify the PDU session in GTP-U tunnels",
+        "c": "Assign AMF name",
+        "d": "Configure PLMN"
+      },
+      "explanations": {
+        "a": "Incorrect — TEID does not identify UEs.",
+        "b": "Correct — TEID (Tunnel Endpoint Identifier) uniquely identifies a GTP-U tunnel per PDU session.",
+        "c": "Incorrect — AMF name is a logical identifier.",
+        "d": "Incorrect — PLMN configuration is independent of TEID."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "During PDU Session Resource Setup, the UL TEID is provided by:",
+      "answers": {
+        "a": "AMF",
+        "b": "UPF",
+        "c": "gNB",
+        "d": "SMF"
+      },
+      "explanations": {
+        "a": "Incorrect — AMF is not involved in TEID assignment.",
+        "b": "Correct — The UPF provides the uplink TEID to the SMF during PDU session setup.",
+        "c": "Incorrect — The gNB uses the provided TEID, not assigns it.",
+        "d": "Incorrect — SMF coordinates setup but does not generate TEIDs."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which message initiates the activation of the N3 interface?",
+      "answers": {
+        "a": "NG Setup Request",
+        "b": "PDU Session Resource Setup Request",
+        "c": "GTP-U Tunnel Resume",
+        "d": "SCTP Heartbeat"
+      },
+      "explanations": {
+        "a": "Incorrect — NG Setup establishes N2 signaling.",
+        "b": "Correct — PDU Session Resource Setup Request initiates N3 tunnel setup between gNB and UPF.",
+        "c": "Incorrect — GTP-U tunnels are created dynamically.",
+        "d": "Incorrect — SCTP Heartbeat maintains connectivity."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "The default paging DRX value in the NG Setup Request is used to define:",
+      "answers": {
+        "a": "UE slice type",
+        "b": "Paging interval for idle UEs",
+        "c": "AMF region selection",
+        "d": "GTP-U tunnel overhead"
+      },
+      "explanations": {
+        "a": "Incorrect — Slicing is unrelated to DRX.",
+        "b": "Correct — DRX defines the interval between paging cycles for idle-mode UEs.",
+        "c": "Incorrect — AMF region is determined by GUAMI.",
+        "d": "Incorrect — DRX is not related to tunnel overhead."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which protocol stack is used for NGAP messages between gNB and AMF?",
+      "answers": {
+        "a": "NGAP → UDP → IP → Ethernet",
+        "b": "NGAP → SCTP → IP → Ethernet",
+        "c": "NGAP → TCP → IP → Ethernet",
+        "d": "NGAP → GTP-U → IP → Ethernet"
+      },
+      "explanations": {
+        "a": "Incorrect — UDP is not used for NGAP signaling.",
+        "b": "Correct — NGAP messages are carried over SCTP on top of IP and Ethernet.",
+        "c": "Incorrect — TCP is not used for NGAP transport.",
+        "d": "Incorrect — GTP-U carries user-plane traffic, not signaling."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In uplink data flow, GTP-U packets from the gNB are encapsulated using which outer source and destination IP addresses?",
+      "answers": {
+        "a": "gNB → UE",
+        "b": "UE → UPF",
+        "c": "gNB → UPF",
+        "d": "UPF → UE"
+      },
+      "explanations": {
+        "a": "Incorrect — UE is not directly addressed in GTP-U.",
+        "b": "Incorrect — UE traffic is encapsulated by gNB.",
+        "c": "Correct — GTP-U packets travel from gNB (source) to UPF (destination).",
+        "d": "Incorrect — That is the downlink path."
+      },
+      "correctAnswer": "c",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "What part of the PDU session setup message indicates the slice being used?",
+      "answers": {
+        "a": "PLMN ID",
+        "b": "S-NSSAI",
+        "c": "DRX",
+        "d": "GUAMI"
+      },
+      "explanations": {
+        "a": "Incorrect — PLMN ID identifies the operator.",
+        "b": "Correct — S-NSSAI (Single Network Slice Selection Assistance Information) identifies the network slice for the PDU session.",
+        "c": "Incorrect — DRX relates to UE sleep cycles.",
+        "d": "Incorrect — GUAMI identifies AMF region and instance."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "Which component in the 5G Core is primarily responsible for session management and TEID allocation?",
+      "answers": {
+        "a": "AMF",
+        "b": "SMF",
+        "c": "UPF",
+        "d": "AUSF"
+      },
+      "explanations": {
+        "a": "Incorrect — AMF manages signaling, not TEIDs.",
+        "b": "Correct — SMF allocates TEIDs and manages session establishment with UPF.",
+        "c": "Incorrect — UPF provides TEIDs but under SMF direction.",
+        "d": "Incorrect — AUSF handles authentication."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    },
+    {
+      "question": "In the SBA Simulator Dashboard, what is the correct sequence to start the 5G network functions?",
+      "answers": {
+        "a": "Start gNB first, then core NFs",
+        "b": "Start all core NFs, then gNB",
+        "c": "Start UPF only, then gNB",
+        "d": "Start SMF only, then AMF"
+      },
+      "explanations": {
+        "a": "Incorrect — gNB must connect to already running core NFs.",
+        "b": "Correct — Core NFs (AMF, SMF, UPF, etc.) should start first, followed by gNB to establish connections.",
+        "c": "Incorrect — UPF alone cannot handle signaling.",
+        "d": "Incorrect — Both AMF and SMF are required to be running before gNB starts."
+      },
+      "correctAnswer": "b",
+      "difficulty": "beginner"
+    }
+  ]
+}
