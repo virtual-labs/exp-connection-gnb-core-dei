@@ -1,8 +1,11 @@
 {
   "version": 2.0,
+  "filters": {
+    "difficulty": ["beginner", "intermediate"]
+  },
   "questions": [
     {
-      "question": "What is the primary purpose of the NG Setup procedure?",
+      "question": "Q1. What is the primary purpose of the NG Setup procedure?",
       "answers": {
         "a": "To send user data packets through the N3 interface",
         "b": "To establish the control plane connection between gNB and AMF",
@@ -19,7 +22,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Which protocol is used in the NG-C interface?",
+      "question": "Q2. Which protocol is used in the NG-C interface?",
       "answers": {
         "a": "GTP-U",
         "b": "NGAP",
@@ -33,10 +36,10 @@
         "d": "Incorrect — FTP has no role in 5G signaling."
       },
       "correctAnswer": "b",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "NG Setup signaling runs over which transport protocol?",
+      "question": "Q3. NG Setup signaling runs over which transport protocol?",
       "answers": {
         "a": "TCP",
         "b": "SCTP",
@@ -53,7 +56,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "The N3 interface connects the gNB to which core network function?",
+      "question": "Q4. The N3 interface connects the gNB to which core network function?",
       "answers": {
         "a": "AMF",
         "b": "SMF",
@@ -70,7 +73,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What protocol is used for user plane data transport over the N3 interface?",
+      "question": "Q5. What protocol is used for user plane data transport over the N3 interface?",
       "answers": {
         "a": "NGAP",
         "b": "GTP-U",
@@ -87,7 +90,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Which of the following identifies the PDU session in 5G?",
+      "question": "Q6. Which of the following identifies the PDU session in 5G?",
       "answers": {
         "a": "GTP-U",
         "b": "TEID",
@@ -101,10 +104,10 @@
         "d": "Incorrect — PLMN identifies operator."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "In GTP-U, what does TEID stand for?",
+      "question": "Q7. In GTP-U, what does TEID stand for?",
       "answers": {
         "a": "Tunnel Endpoint Identifier",
         "b": "Transmission Element ID",
@@ -121,7 +124,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What is a common port number used by GTP-U?",
+      "question": "Q8. What is a common port number used by GTP-U?",
       "answers": {
         "a": "38412",
         "b": "8080",
@@ -135,10 +138,10 @@
         "d": "Incorrect — 110 is used for POP3 email."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "The AMF is responsible for which type of plane?",
+      "question": "Q9. The AMF is responsible for which type of plane?",
       "answers": {
         "a": "User Plane",
         "b": "Control Plane",
@@ -155,7 +158,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What is the main element exchanged in the NG Setup Request?",
+      "question": "Q10. What is the main element exchanged in the NG Setup Request?",
       "answers": {
         "a": "S-NSSAI",
         "b": "AMF Name",
@@ -172,7 +175,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Which component assigns the UL TEID during PDU session setup?",
+      "question": "Q11. Which component assigns the UL TEID during PDU session setup?",
       "answers": {
         "a": "AMF",
         "b": "SMF",
@@ -186,10 +189,10 @@
         "d": "Incorrect — gNB uses TEIDs but does not allocate them."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "The default paging DRX value in NG Setup is used for:",
+      "question": "Q12. The default paging DRX value in NG Setup is used for:",
       "answers": {
         "a": "Determining slice type",
         "b": "Controlling paging intervals",
@@ -206,7 +209,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "The NG Setup Response contains which of the following?",
+      "question": "Q13. The NG Setup Response contains which of the following?",
       "answers": {
         "a": "Global RAN Node ID",
         "b": "UL TEID",
@@ -220,10 +223,10 @@
         "d": "Incorrect — PDU Session ID is unrelated to NG Setup."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "The NG-C interface typically uses which port number?",
+      "question": "Q14. The NG-C interface typically uses which port number?",
       "answers": {
         "a": "80",
         "b": "2123",
@@ -240,7 +243,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What is the sequence after NG Setup and UE registration to enable user data flow?",
+      "question": "Q15. What is the sequence after NG Setup and UE registration to enable user data flow?",
       "answers": {
         "a": "NG Reset",
         "b": "PDU Session Setup",

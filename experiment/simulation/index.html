@@ -15,10 +15,11 @@
         <!-- Top Toolbar -->
         <div class="toolbar">
             <div class="toolbar-left">
-                <h1>🌐 Connection of gNB to Core Network Dashboard</h1>
+                <h1>🌐 Connection of gNB to Core Network </h1>
             </div>
             <div class="toolbar-right">
                 <!-- Main action buttons -->
+                <button id="btn-one-click-deploy" class="btn btn-success">🚀 One-Click Deploy</button>
                 <button id="btn-terminal" class="btn btn-terminal">💻 Terminal</button>
                 <button id="btn-add-nf" class="btn btn-primary">➕ Add NF</button>
                 <button id="btn-clear" class="btn btn-danger">🗑️ Clears</button>
@@ -118,39 +119,28 @@
     <!-- Help Modal -->
     <div id="help-modal" class="modal" style="display:none;">
         <div class="modal-content help-modal-content">
-            <h2>📚 5G Service-Based Architecture Guide</h2>
+            <h2>📚 Simulation Steps</h2>
             <div class="help-content">
                 <div class="help-section">
-                    <h3>🏗️ Reference Architecture</h3>
-                    <div class="architecture-diagram">
-                        <img id="sba-diagram" src="images/sba/sba.jpg" alt="5G Service-Based Architecture"
-                            style="width: 100%; max-width: 800px; height: auto; background: #1a252f; border-radius: 8px;">
-                    </div>
-                </div>
-
-                <div class="help-section">
-                    <h3>🚀 Quick Start Guide</h3>
                     <ol class="help-steps">
-                        <li><strong>Create Service Buses:</strong> Click "📊 Add Bus Line" to create Control Plane and
-                            User Plane buses</li>
-                        <li><strong>Add Network Functions:</strong> Click "➕ Add NF" to add AMF, SMF, UPF, etc.</li>
-                        <li><strong>Connect Components:</strong> Use "Select Source" → "Select Destination" to connect
-                            NFs to buses</li>
-                        <li><strong>Validate Topology:</strong> Click "✓ Validate" to check your 5G network design</li>
+                        <li>Open the SBA Simulator Dashboard and verify all panels are visible (NF List, Configuration Panel, Logs, Terminal).</li>
+                        <li>Click <strong>Terminal</strong> and run <code>docker compose -f docker-compose.yml up -d</code> to start all core network containers.</li>
+                        <li>Run <code>docker compose -f docker-compose-gnb.yml up -d</code> to deploy the gNB and connect it to the core.</li>
+                        <li>Run <code>watch docker compose -f docker-compose.yml ps -a</code> to monitor container status in real time.</li>
+                        <li>From the NF List, click an NF (e.g. NRF first, then AMF, SMF, UPF, etc.) to open its Configuration Panel.</li>
+                        <li>Enter a valid IP address, port number, and HTTP protocol, then click <strong>Start NF</strong>.</li>
+                        <li>Wait 4–5 seconds for the NF to stabilize and register with the NRF.</li>
+                        <li>Check the Logs Section for "NF started successfully" and "Service registration complete".</li>
+                        <li>Repeat steps 5–8 for all remaining NFs (AMF, SMF, UPF, UDM, AUSF, PCF, etc.).</li>
+                        <li>Select the gNB tile, fill in IP and port, then click <strong>Start gNB</strong> and wait for it to stabilize.</li>
+                        <li>Click <strong>Trigger NGAP Flow</strong> in the gNB Configuration Panel to establish the control plane link with AMF.</li>
+                        <li>Click <strong>Trigger GTP-U Packet</strong> to activate the user plane tunnel between gNB and UPF.</li>
+                        <li>Click an NF, open its <strong>Command Prompt</strong>, and run <code>ping &lt;target_IP&gt;</code> to validate NF-to-NF connectivity.</li>
+                        <li>Check ping output — zero packet loss confirms the components can reach each other.</li>
                     </ol>
                 </div>
-
-                <div class="help-section">
-                    <h3>🔗 Connection Types</h3>
-                    <ul class="help-list">
-                        <li><span class="connection-type nf-bus">NF → Bus:</span> Connect Network Functions to Service
-                            Buses</li>
-                        <li><span class="connection-type bus-nf">Bus → NF:</span> Connect Service Buses to Network
-                            Functions</li>
-                        <li><span class="connection-type bus-bus">Bus → Bus:</span> Create bridges between different
-                            service buses</li>
-                        <li><span class="connection-type nf-nf">NF → NF:</span> Direct point-to-point connections</li>
-                    </ul>
+                <div class="help-section" style="text-align:center; padding: 10px;">
+                    <a href="../procedure.html" target="_blank" class="help-procedure-link">For More Detailes...📄 View Full Procedures</a>
                 </div>
             </div>
             <button id="help-close" class="btn btn-primary btn-block">Close</button>

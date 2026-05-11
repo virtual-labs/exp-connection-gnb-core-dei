@@ -293,5 +293,26 @@
       "Create database tables (subscribers, credentials, profiles)"
     ],
     "errors": {}
+  },
+  "ext-dn": {
+    "name": "External Data Network",
+    "required": [],
+    "optional": ["UPF"],
+    "description": "External Data Network provides internet access and application servers",
+    "startupChecks": [
+      "Initialize external data network services",
+      "Setup routing tables",
+      "Configure NAT/firewall rules",
+      "Verify internet connectivity"
+    ],
+    "errors": {
+      "NO_UPF": {
+        "code": "EXT_DN_WARN_001",
+        "message": "No UPF connection - External network isolated",
+        "severity": "MEDIUM",
+        "impact": "UEs cannot access internet or external services",
+        "resolution": "Add UPF and create N6 connection"
+      }
+    }
   }
 }

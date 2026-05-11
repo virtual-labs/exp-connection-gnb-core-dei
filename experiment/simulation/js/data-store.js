@@ -33,9 +33,16 @@ class DataStore {
      * @param {Object} nf - Network Function object
      */
     addNF(nf) {
+        // Prevent duplicate NF types — each type can only exist once
+        const duplicate = this.nfs.find(existing => existing.type === nf.type);
+        if (duplicate) {
+            console.warn(`⚠️ DataStore: ${nf.type} already exists (${duplicate.name}), skipping duplicate.`);
+            return false;
+        }
         this.nfs.push(nf);
         this.notifyListeners('nf-added', nf);
         console.log('📦 DataStore: NF added:', nf.name);
+        return true;
     }
 
     /**

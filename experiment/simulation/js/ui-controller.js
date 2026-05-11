@@ -29,6 +29,7 @@ class UIController {
         console.log('🎮 Initializing UI...');
 
         // Setup all button handlers
+        this.setupOneClickDeployButton();
         this.setupTerminalButton();
         this.setupAddNFButton();
         this.setupClearButton();
@@ -555,6 +556,172 @@ class UIController {
 
         console.log('✅ Topology cleared');
         alert('Topology cleared successfully!');
+        // Full refresh ensures complete re-initialization of all managers and UI state
+        window.location.reload();
+    }
+
+    /**
+     * Setup One-Click Deploy button
+     */
+    setupOneClickDeployButton() {
+        const deployBtn = document.getElementById('btn-one-click-deploy');
+        if (!deployBtn) {
+            console.error('❌ One-Click Deploy button not found');
+            return;
+        }
+
+        deployBtn.addEventListener('click', async () => {
+            console.log('🚀 One-Click Deploy clicked');
+            await this.deployOneClickTopology();
+        });
+    }
+
+    /**
+     * Deploy entire core network topology from one-click.json.
+     * NFs appear on canvas one-by-one over 10–13 seconds. No overlay modal.
+     * Logs are generated from log-scenarios.json for each NF as it deploys.
+     */
+    async deployOneClickTopology() {
+        const confirmed = confirm(
+            '🚀 ONE-CLICK DEPLOYMENT\n\n' +
+            'This will deploy the complete 5G core network\n' +
+            'topology (~10–13 seconds).\n\n' +
+            'Current topology will be cleared.\n\n' +
+            'Continue?'
+        );
+        if (!confirmed) return;
+
+        // Disable the button during deployment
+        const deployBtn = document.getElementById('btn-one-click-deploy');
+        if (deployBtn) {
+            deployBtn.disabled = true;
+            deployBtn.textContent = '⏳ Deploying…';
+        }
+
+        try {
+            // Load topology JSON
+            const response = await fetch('../one-click.json');
+            if (!response.ok) throw new Error(`Cannot load one-click.json (HTTP ${response.status})`);
+            const data = await response.json();
+
+            // Clear existing topology and logs
+            if (window.dataStore) window.dataStore.clearAll();
+            if (window.logEngine) {
+                const lc = document.getElementById('log-content');
+                if (lc) lc.innerHTML = '';
+                window.logEngine.clearAllLogs();
+            }
+            if (window.canvasRenderer) window.canvasRenderer.render();
+            await this._delay(300);
+
+            // Deploy service bus first (silent, no log)
+            (data.buses || []).forEach(b => window.dataStore?.addBus(b));
+            if (window.canvasRenderer) window.canvasRenderer.render();
+            await this._delay(300);
+
+            // Reset NF counters
+            if (window.nfManager) {
+                Object.keys(window.nfManager.nfCounters).forEach(t => window.nfManager.nfCounters[t] = 0);
+            }
+
+            // Pre-load all NF data into dataStore silently first so dependency
+            // checks inside log-scenarios work correctly (NFs exist when logs fire)
+            // UE is excluded from one-click deployment
+            const nfs = (data.nfs || []).filter(nf => nf.type !== 'UE');
+            const nfObjects = nfs.map(nfData => ({ ...nfData, iconImage: null }));
+
+            // Spread NF deployment across 8500 ms total
+            const perNFDelay = nfObjects.length > 0 ? Math.floor(8500 / nfObjects.length) : 650;
+
+            // Also pre-load connections/busConnections into dataStore so
+            // hasConnectionToType() returns true when scenario logs fire
+            // Skip any connections that involve a UE
+            const ueIds = new Set((data.nfs || []).filter(n => n.type === 'UE').map(n => n.id));
+            (data.busConnections || [])
+                .filter(c => !ueIds.has(c.nfId))
+                .forEach(c => window.dataStore?.addBusConnection(c));
+            (data.connections || [])
+                .filter(c => !ueIds.has(c.sourceId) && !ueIds.has(c.targetId))
+                .forEach(c => window.dataStore?.addConnection(c));
+
+            // Now deploy each NF one-by-one with scenario-driven logs
+            for (let i = 0; i < nfObjects.length; i++) {
+                const nf = nfObjects[i];
+
+                // Load icon async (non-blocking)
+                if (nf.icon) {
+                    const img = new Image();
+                    img.onload = () => {
+                        nf.iconImage = img;
+                        if (window.canvasRenderer) window.canvasRenderer.render();
+                    };
+                    img.src = nf.icon;
+                }
+
+                // Add to data store so it appears on canvas
+                if (window.dataStore) {
+                    window.dataStore.addNF(nf);
+                    if (window.nfManager) {
+                        const num = parseInt(nf.name.split('-').pop());
+                        if (!isNaN(num) && num > (window.nfManager.nfCounters[nf.type] || 0)) {
+                            window.nfManager.nfCounters[nf.type] = num;
+                        }
+                    }
+                }
+
+                if (window.canvasRenderer) window.canvasRenderer.render();
+
+                // Fire scenario-based logs for this NF (same system used during manual deploy)
+                if (window.logEngine) {
+                    window.logEngine.onNFAdded(nf);
+                }
+
+                await this._delay(perNFDelay);
+            }
+
+            // Final render with all connections visible
+            if (window.canvasRenderer) window.canvasRenderer.render();
+
+            if (window.logEngine) {
+                window.logEngine.addLog('system', 'SUCCESS',
+                    '5G Core Network fully deployed via One-Click Deploy', {
+                    nfsDeployed: nfObjects.length,
+                    connectionsDeployed: (data.connections || []).length,
+                    busesDeployed: (data.buses || []).length,
+                    busConnectionsDeployed: (data.busConnections || []).length,
+                    deployedAt: new Date().toISOString()
+                });
+            }
+
+            alert(
+                '✅ DEPLOYMENT SUCCESSFUL!\n\n' +
+                `Network Functions : ${nfObjects.length}\n` +
+                `Connections       : ${(data.connections || []).length}\n` +
+                `Service Buses     : ${(data.buses || []).length}\n` +
+                `Bus Connections   : ${(data.busConnections || []).length}\n\n` +
+                'Your 5G core network is ready!'
+            );
+
+        } catch (error) {
+            console.error('❌ Deployment failed:', error);
+            alert('❌ Deployment Failed!\n\n' + error.message);
+            if (window.logEngine) {
+                window.logEngine.addLog('system', 'ERROR', 'One-Click Deploy failed', { error: error.message });
+            }
+        } finally {
+            if (deployBtn) {
+                deployBtn.disabled = false;
+                deployBtn.textContent = '🚀 One-Click Deploy';
+            }
+        }
+    }
+
+    /**
+     * Small async delay helper
+     * @param {number} ms
+     */
+    _delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**
@@ -817,14 +984,11 @@ class UIController {
             </div>
             ` : ''}
             
-            <div class="troubleshoot-section">
-                <h4>🔧 Troubleshoot</h4>
-                <p class="config-hint">Open Windows-style terminal for network diagnostics</p>
-                
-                <button class="btn btn-terminal btn-block" id="btn-open-terminal">
-                    💻 Open Command Prompt
-                </button>
-            </div>
+            
+            <button class="btn btn-terminal btn-block" id="btn-open-terminal">
+                💻 Open Command Prompt
+            </button>
+            
         `;
 
         // Protocol change event listener
@@ -987,8 +1151,12 @@ class UIController {
                     window.canvasRenderer.render();
                 }
             } else {
-                // NF creation failed (e.g., UE limit reached)
+                // NF creation failed (e.g., UE limit reached or duplicate type)
                 console.warn('⚠️ NF creation failed for type:', nfType);
+                const existingOfType = window.dataStore?.getAllNFs().find(n => n.type === nfType);
+                if (existingOfType) {
+                    alert(`❌ ${nfType} is already deployed (${existingOfType.name}).\n\nEach Network Function type can only be deployed once.\n\nTo redeploy, delete the existing ${existingOfType.name} first.`);
+                }
                 // Don't clear the config panel so user can try a different NF type
                 return;
             }
@@ -1698,21 +1866,12 @@ class UIController {
                         Command Prompt - ${nf.name} (${nf.config.ipAddress})
                     </div>
                     <div class="terminal-controls">
-                        <button class="terminal-btn minimize">−</button>
-                        <button class="terminal-btn maximize">□</button>
                         <button class="terminal-btn close" id="terminal-close">×</button>
                     </div>
                 </div>
                 <div class="windows-terminal-content" id="terminal-content">
-                    <div class="terminal-header">
-                        Microsoft Windows [Version 10.0.19045.3570]<br>
-                        (c) Microsoft Corporation. All rights reserved.<br><br>
-                    </div>
+                    
                     <div class="terminal-output" id="terminal-output"></div>
-                    <div class="terminal-input-line">
-                        <span class="terminal-prompt">C:\\${nf.name}></span>
-                        <input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false">
-                    </div>
                 </div>
             </div>
         `;
@@ -1726,12 +1885,6 @@ class UIController {
         setTimeout(() => {
             terminalModal.classList.add('show');
         }, 10);
-
-        // Focus on input
-        const input = document.getElementById('terminal-input');
-        if (input) {
-            input.focus();
-        }
     }
 
     /**
@@ -1740,68 +1893,203 @@ class UIController {
      * @param {HTMLElement} terminalModal - Terminal modal element
      */
     setupWindowsTerminal(nf, terminalModal) {
-        const input = document.getElementById('terminal-input');
         const output = document.getElementById('terminal-output');
         const closeBtn = document.getElementById('terminal-close');
-        
+
         let commandHistory = [];
         let historyIndex = -1;
+        let activePromptInput = null;
+        let runningCommand = null; // Track long-running commands
 
-        // Close button
         closeBtn.addEventListener('click', () => {
             terminalModal.classList.remove('show');
-            setTimeout(() => {
-                terminalModal.remove();
-            }, 300);
+            setTimeout(() => terminalModal.remove(), 300);
         });
 
-        // Click outside to close
         terminalModal.addEventListener('click', (e) => {
-            if (e.target === terminalModal) {
-                closeBtn.click();
-            }
+            if (e.target === terminalModal) closeBtn.click();
         });
 
-        // Input handling
-        input.addEventListener('keydown', async (e) => {
-            if (e.key === 'Enter') {
-                const command = input.value.trim();
-                if (command) {
-                    // Add to history
-                    commandHistory.push(command);
-                    historyIndex = commandHistory.length;
+        output.addEventListener('click', () => {
+            if (activePromptInput) this.focusTerminalPrompt(activePromptInput);
+        });
 
-                    // Display command
-                    this.addTerminalLine(output, `C:\\${nf.name}>${command}`, 'command');
+        const allCmds = [
+            'help', 'ifconfig', 'systeminfo', 'netstat', 'cls', 'clear', 'exit',
+            'ping subnet', 'ping '
+        ];
+
+        const longestCommonPrefix = (strs) => {
+            if (!strs.length) return '';
+            let prefix = strs[0];
+            for (let i = 1; i < strs.length; i++) {
+                while (!strs[i].startsWith(prefix)) prefix = prefix.slice(0, -1);
+            }
+            return prefix;
+        };
+
+        // Complete only up to the next word boundary beyond what's typed
+        const nextWordCompletion = (typed, full) => {
+            if (full.length <= typed.length) return full;
+            const rest = full.slice(typed.length);
+            const spaceIdx = rest.indexOf(' ');
+            if (spaceIdx === -1) {
+                // Last word - complete it fully
+                return full;
+            }
+            // Complete only up to the next space (one word at a time)
+            return typed + rest.slice(0, spaceIdx + 1); // include trailing space
+        };
+
+        let lastTabTyped = null;
+        let lastTabTime = 0;
+
+        const attachInputHandlers = (promptInput, promptLine) => {
+            promptInput.addEventListener('keydown', async (e) => {
+                // Handle Ctrl+C to stop long-running commands
+                if (e.ctrlKey && e.key === 'c') {
+                    if (runningCommand) {
+                        e.preventDefault();
+                        this.addTerminalLine(output, '^C', 'info');
+                        this.addTerminalLine(output, '', 'blank');
+                        runningCommand = null; // Clear running command
+                        
+                        // Create new prompt
+                        const next = this.createTerminalPromptLine(nf.name);
+                        output.appendChild(next.line);
+                        activePromptInput = next.input;
+                        attachInputHandlers(next.input, next.line);
+                        this.focusTerminalPrompt(next.input);
+                        output.scrollTop = output.scrollHeight;
+                        return;
+                    }
+                }
+
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const typed = promptInput.textContent;
+                    const matches = allCmds.filter(c => c.startsWith(typed) && c !== typed);
+                    if (matches.length === 0) return;
+
+                    const common = longestCommonPrefix(matches);
+                    const completion = nextWordCompletion(typed, common);
+
+                    if (completion.length > typed.length) {
+                        // Fill one word at a time
+                        promptInput.textContent = completion;
+                        this.moveTerminalCaretToEnd(promptInput);
+                        lastTabTyped = completion;
+                        lastTabTime = Date.now();
+                    } else {
+                        // At word boundary — double-Tab shows next word options only
+                        const now = Date.now();
+                        const isDoubleTab = (lastTabTyped === typed && now - lastTabTime < 500);
+                        lastTabTyped = typed;
+                        lastTabTime = now;
+                        if (!isDoubleTab) return;
+
+                        // Extract only the next word from each match
+                        const nextWords = new Set();
+                        matches.forEach(m => {
+                            const rest = m.slice(typed.length);
+                            const spaceIdx = rest.indexOf(' ');
+                            const nextWord = spaceIdx === -1 ? rest : rest.slice(0, spaceIdx);
+                            if (nextWord) nextWords.add(nextWord);
+                        });
+
+                        const blankBefore = document.createElement('div');
+                        blankBefore.className = 'terminal-line terminal-blank';
+                        blankBefore.innerHTML = '&nbsp;';
+                        output.insertBefore(blankBefore, promptLine);
+                        
+                        // Show only unique next words
+                        Array.from(nextWords).sort().forEach(word => {
+                            const s = document.createElement('div');
+                            s.className = 'terminal-line terminal-info';
+                            s.textContent = word;
+                            output.insertBefore(s, promptLine);
+                        });
+                        
+                        const blankAfter = document.createElement('div');
+                        blankAfter.className = 'terminal-line terminal-blank';
+                        blankAfter.innerHTML = '&nbsp;';
+                        output.insertBefore(blankAfter, promptLine);
+                        output.scrollTop = output.scrollHeight;
+                        requestAnimationFrame(() => {
+                            this.focusTerminalPrompt(promptInput);
+                            this.moveTerminalCaretToEnd(promptInput);
+                        });
+                    }
+                    return;
+                }
+
+                lastTabTyped = null;
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const command = promptInput.textContent.trim();
+                    promptLine.classList.remove('terminal-active-prompt');
+                    promptInput.contentEditable = 'false';
+                    promptInput.classList.remove('terminal-live-input');
+
+                    if (command) {
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                        const isLongRunning = await this.processWindowsCommand(nf, command, output);
+                        
+                        if (isLongRunning) {
+                            // Set running command so Ctrl+C can stop it
+                            runningCommand = command;
+                        } else {
+                            // Only create new prompt if command is not long-running
+                            const next = this.createTerminalPromptLine(nf.name);
+                            output.appendChild(next.line);
+                            activePromptInput = next.input;
+                            attachInputHandlers(next.input, next.line);
+                            this.focusTerminalPrompt(next.input);
+                        }
+                    } else {
+                        this.addTerminalLine(output, '', 'blank');
+                        const next = this.createTerminalPromptLine(nf.name);
+                        output.appendChild(next.line);
+                        activePromptInput = next.input;
+                        attachInputHandlers(next.input, next.line);
+                        this.focusTerminalPrompt(next.input);
+                    }
                     
-                    // Clear input
-                    input.value = '';
+                    output.scrollTop = output.scrollHeight;
 
-                    // Process command
-                    await this.processWindowsCommand(nf, command, output);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        promptInput.textContent = commandHistory[historyIndex];
+                        this.moveTerminalCaretToEnd(promptInput);
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        promptInput.textContent = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        promptInput.textContent = '';
+                    }
+                    this.moveTerminalCaretToEnd(promptInput);
                 }
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    input.value = commandHistory[historyIndex];
-                }
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (historyIndex < commandHistory.length - 1) {
-                    historyIndex++;
-                    input.value = commandHistory[historyIndex];
-                } else {
-                    historyIndex = commandHistory.length;
-                    input.value = '';
-                }
-            }
-        });
+            });
+        };
 
-        // Initial welcome message
         this.addTerminalLine(output, `Connected to ${nf.name} (${nf.config.ipAddress})`, 'info');
         this.addTerminalLine(output, 'Type "help" for available commands.', 'info');
         this.addTerminalLine(output, '', 'blank');
+
+        const initialPrompt = this.createTerminalPromptLine(nf.name);
+        output.appendChild(initialPrompt.line);
+        activePromptInput = initialPrompt.input;
+        attachInputHandlers(initialPrompt.input, initialPrompt.line);
+        this.focusTerminalPrompt(initialPrompt.input);
     }
 
     /**
@@ -1809,6 +2097,7 @@ class UIController {
      * @param {Object} nf - Network Function
      * @param {string} command - Command to process
      * @param {HTMLElement} output - Output element
+     * @returns {Promise<boolean>} - Returns true if command is long-running (no prompt should appear)
      */
     async processWindowsCommand(nf, command, output) {
         const cmd = command.toLowerCase().trim();
@@ -1816,8 +2105,10 @@ class UIController {
 
         if (cmd === 'help' || cmd === '?') {
             this.showWindowsHelp(output);
-        } else if (cmd === 'ipconfig') {
-            this.showIPConfig(nf, output);
+        } else if (cmd === 'ifconfig') {
+            this.showifconfig(nf, output);
+        } else if (cmd === 'ping subnet') {
+            await this.executeWindowsPingSubnet(nf, output);
         } else if (cmd.startsWith('ping ')) {
             const target = args[1];
             if (target) {
@@ -1825,15 +2116,20 @@ class UIController {
             } else {
                 this.addTerminalLine(output, 'Usage: ping <hostname or IP address>', 'error');
             }
-        } else if (cmd === 'ping subnet') {
-            await this.executeWindowsPingSubnet(nf, output);
+        } else if (cmd === 'iperf3 -s' || cmd === 'iperf3 -s -p 5201') {
+            // Long-running iperf3 server command
+            this.addTerminalLine(output, '', 'blank');
+            this.addTerminalLine(output, '-----------------------------------------------------------', 'info');
+            this.addTerminalLine(output, 'Server listening on 5201', 'info');
+            this.addTerminalLine(output, '-----------------------------------------------------------', 'info');
+            this.addTerminalLine(output, '', 'blank');
+            // Return true to indicate this is a long-running command
+            return true;
         } else if (cmd === 'cls' || cmd === 'clear') {
             output.innerHTML = '';
         } else if (cmd === 'exit') {
             const closeBtn = document.getElementById('terminal-close');
             if (closeBtn) closeBtn.click();
-        } else if (cmd === 'dir') {
-            this.showDirectory(output);
         } else if (cmd === 'systeminfo') {
             this.showSystemInfo(nf, output);
         } else if (cmd === 'netstat') {
@@ -1846,6 +2142,42 @@ class UIController {
         }
 
         this.addTerminalLine(output, '', 'blank');
+        return false; // Normal command, prompt should appear
+    }
+
+    createTerminalPromptLine(nfName) {
+        const line = document.createElement('div');
+        line.className = 'terminal-line terminal-command terminal-prompt-line terminal-active-prompt';
+
+        const prompt = document.createElement('span');
+        prompt.className = 'terminal-prompt';
+        prompt.textContent = `C:\\${nfName}>`;
+
+        const input = document.createElement('span');
+        input.className = 'terminal-live-input';
+        input.contentEditable = 'true';
+        input.spellcheck = false;
+        input.setAttribute('aria-label', 'Terminal command input');
+
+        line.appendChild(prompt);
+        line.appendChild(input);
+        return { line, input };
+    }
+
+    focusTerminalPrompt(input) {
+        if (!input) return;
+        input.focus();
+        this.moveTerminalCaretToEnd(input);
+    }
+
+    moveTerminalCaretToEnd(el) {
+        const selection = window.getSelection();
+        if (!selection) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     /**
@@ -1872,13 +2204,17 @@ class UIController {
         const helpText = [
             'Available commands:',
             '',
-            'HELP        - Display this help message',
-            'IPCONFIG    - Display network configuration',
-            'PING        - Test network connectivity',
-            'SYSTEMINFO  - Display system information',
-            'NETSTAT     - Display network connections',
-            'CLS         - Clear the screen',
-            'EXIT        - Close this terminal',
+            'help          - Display this help message',
+            'ifconfig      - Display network configuration',
+            'ping <ip>     - Ping a specific IP address',
+            'ping subnet   - Ping all services in same subnet',
+            'iperf3 -s     - Start iperf3 server (long-running)',
+            'systeminfo    - Display system information',
+            'netstat       - Display network connections',
+            'cls / clear   - Clear the screen',
+            'exit          - Close this terminal',
+            '',
+            'Tip: Press Tab to autocomplete commands.',
             ''
         ];
 
@@ -1892,7 +2228,7 @@ class UIController {
      * @param {Object} nf - Network Function
      * @param {HTMLElement} output - Output element
      */
-    showIPConfig(nf, output) {
+    showifconfig(nf, output) {
         const lines = [
             'Windows IP Configuration',
             '',
@@ -2082,7 +2418,13 @@ class UIController {
      * Show directory listing
      * @param {HTMLElement} output - Output element
      */
-   
+    showDirectory(output) {
+        this.addTerminalLine(output, ' Volume in drive C has no label.', 'info');
+        this.addTerminalLine(output, ' Volume Serial Number is 1234-ABCD', 'info');
+        this.addTerminalLine(output, '', 'blank');
+        this.addTerminalLine(output, ' Directory of C:\\', 'info');
+        this.addTerminalLine(output, '01/30/2024  10:00 AM               3842 docker-compose.yml', 'info');
+    }
 
     /**
      * Show system information

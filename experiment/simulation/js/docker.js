@@ -65,21 +65,11 @@ class DockerTerminal {
                         Docker Terminal - Main Terminal
                     </div>
                     <div class="docker-terminal-controls">
-                        <button class="docker-terminal-btn minimize" id="docker-terminal-minimize" title="Minimize">−</button>
-                        <button class="docker-terminal-btn maximize" id="docker-terminal-maximize" title="Maximize">□</button>
                         <button class="docker-terminal-btn close" id="docker-terminal-close" title="Close">×</button>
                     </div>
                 </div>
                 <div class="docker-terminal-content" id="docker-terminal-content">
-                    <div class="docker-terminal-header">
-                        Docker Terminal v1.0<br>
-                        Type 'help' for available commands<br><br>
-                    </div>
                     <div class="docker-terminal-output" id="docker-terminal-output"></div>
-                    <div class="docker-terminal-input-line">
-                        <span class="docker-terminal-prompt">docker@main></span>
-                        <input type="text" id="docker-terminal-input" class="docker-terminal-input" autocomplete="off" spellcheck="false">
-                    </div>
                 </div>
                 <div class="docker-terminal-resize-handle" id="docker-terminal-resize-handle"></div>
             </div>
@@ -91,18 +81,15 @@ class DockerTerminal {
         this.applyTerminalState();
 
         setTimeout(() => terminalModal.classList.add('show'), 10);
-
-        const input = document.getElementById('docker-terminal-input');
-        if (input) input.focus();
     }
 
     setupTerminal(terminalModal) {
-        const input = document.getElementById('docker-terminal-input');
         const output = document.getElementById('docker-terminal-output');
         const closeBtn = document.getElementById('docker-terminal-close');
 
         let commandHistory = [];
         let historyIndex = -1;
+        let activePromptInput = null;
 
         closeBtn.addEventListener('click', () => {
             this.stopWatch();
@@ -114,46 +101,205 @@ class DockerTerminal {
             if (e.target === terminalModal) closeBtn.click();
         });
 
-        input.addEventListener('keydown', async (e) => {
-            if (e.ctrlKey && e.key === 'c' && this.isWatching) {
-                e.preventDefault();
-                this.stopWatch();
-                this.addTerminalLine(output, '', 'blank');
-                this.addTerminalLine(output, 'Watch mode stopped.', 'info');
-                this.addTerminalLine(output, '', 'blank');
-                return;
-            }
-
-            if (e.key === 'Enter') {
-                const command = input.value.trim();
-                if (command) {
-                    commandHistory.push(command);
-                    historyIndex = commandHistory.length;
-                    this.addTerminalLine(output, `docker@main>${command}`, 'command');
-                    input.value = '';
-                    await this.processCommand(command, output);
-                }
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (historyIndex > 0) {
-                    historyIndex--;
-                    input.value = commandHistory[historyIndex];
-                }
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (historyIndex < commandHistory.length - 1) {
-                    historyIndex++;
-                    input.value = commandHistory[historyIndex];
-                } else {
-                    historyIndex = commandHistory.length;
-                    input.value = '';
-                }
-            }
+        output.addEventListener('click', () => {
+            if (activePromptInput) this.focusDockerPrompt(activePromptInput);
         });
 
-        this.addTerminalLine(output, 'Welcome to Docker Terminal', 'info');
+        // Re-attach handlers when watch mode stops via Ctrl+C
+        output.addEventListener('docker-watch-stopped', (e) => {
+            const { input, line } = e.detail;
+            activePromptInput = input;
+            attachInputHandlers(input, line);
+            this.focusDockerPrompt(input);
+        });
+
+        const allCmds = [
+            'help', 'status', 'check', 'cls', 'clear', 'exit',
+            'ls', 'ls -la', 'ls -l', 'ls -a',
+            'vi docker-compose.yml', 'vim docker-compose.yml', 'cat docker-compose.yml',
+            'docker ps', 'docker network ls', 'docker version',
+            'docker compose -f docker-compose.yml up -d',
+            'docker compose -f docker-compose.yml down',
+            'docker compose -f docker-compose-gnb.yml up -d',
+            'docker compose -f docker-compose-gnb.yml down',
+            'docker network inspect bridge',
+            'docker network inspect host',
+            'docker network inspect none',
+            'docker network inspect oaiworkshop',
+            'watch docker compose -f docker-compose.yml ps -a'
+        ];
+
+        const longestCommonPrefix = (strs) => {
+            if (!strs.length) return '';
+            let prefix = strs[0];
+            for (let i = 1; i < strs.length; i++) {
+                while (!strs[i].startsWith(prefix)) prefix = prefix.slice(0, -1);
+            }
+            return prefix;
+        };
+
+        // Truncate a full common prefix to only the next word boundary beyond typed
+        const nextWordCompletion = (typed, full) => {
+            if (full.length <= typed.length) return full;
+            const rest = full.slice(typed.length);
+            // Find the end of the next word (stop at next space, inclusive)
+            const spaceIdx = rest.indexOf(' ');
+            if (spaceIdx === -1) {
+                // No more spaces - complete the whole word
+                return full;
+            }
+            // Complete only up to the next space (one word at a time)
+            return typed + rest.slice(0, spaceIdx + 1); // include the space after the word
+        };
+
+        const attachInputHandlers = (promptInput, promptLine) => {
+            promptInput.addEventListener('keydown', async (e) => {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const typed = promptInput.textContent;
+                    const matches = allCmds.filter(c => c.startsWith(typed) && c !== typed);
+                    if (matches.length === 0) return;
+
+                    const common = longestCommonPrefix(matches);
+                    const completion = nextWordCompletion(typed, common);
+
+                    if (completion.length > typed.length) {
+                        // Fill one word at a time
+                        promptInput.textContent = completion;
+                        this.moveDockerCaretToEnd(promptInput);
+                        lastTabTyped = completion;
+                        lastTabTime = Date.now();
+                    } else {
+                        // At word boundary — double-Tab shows next word options only
+                        const now = Date.now();
+                        const isDoubleTab = (lastTabTyped === typed && now - lastTabTime < 500);
+                        lastTabTyped = typed;
+                        lastTabTime = now;
+                        if (!isDoubleTab) return;
+
+                        // Extract only the next word from each match
+                        const nextWords = new Set();
+                        matches.forEach(m => {
+                            const rest = m.slice(typed.length);
+                            const spaceIdx = rest.indexOf(' ');
+                            const nextWord = spaceIdx === -1 ? rest : rest.slice(0, spaceIdx);
+                            if (nextWord) nextWords.add(nextWord);
+                        });
+
+                        const blankBefore = document.createElement('div');
+                        blankBefore.className = 'docker-terminal-line docker-terminal-blank';
+                        blankBefore.innerHTML = '&nbsp;';
+                        output.insertBefore(blankBefore, promptLine);
+                        
+                        // Show only unique next words
+                        Array.from(nextWords).sort().forEach(word => {
+                            const s = document.createElement('div');
+                            s.className = 'docker-terminal-line docker-terminal-info';
+                            s.textContent = word;
+                            output.insertBefore(s, promptLine);
+                        });
+                        
+                        const blankAfter = document.createElement('div');
+                        blankAfter.className = 'docker-terminal-line docker-terminal-blank';
+                        blankAfter.innerHTML = '&nbsp;';
+                        output.insertBefore(blankAfter, promptLine);
+                        output.scrollTop = output.scrollHeight;
+                        requestAnimationFrame(() => {
+                            this.focusDockerPrompt(promptInput);
+                            this.moveDockerCaretToEnd(promptInput);
+                        });
+                    }
+                    return;
+                }
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const command = promptInput.textContent.trim();
+                    promptLine.classList.remove('docker-terminal-active-prompt');
+                    promptInput.contentEditable = 'false';
+                    promptInput.classList.remove('docker-terminal-live-input');
+
+                    if (command) {
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                        await this.processCommand(command, output);
+                    } else {
+                        this.addTerminalLine(output, '', 'blank');
+                    }
+
+                    const next = this.createDockerPromptLine();
+                    output.appendChild(next.line);
+                    activePromptInput = next.input;
+                    attachInputHandlers(next.input, next.line);
+                    this.focusDockerPrompt(next.input);
+                    output.scrollTop = output.scrollHeight;
+
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        promptInput.textContent = commandHistory[historyIndex];
+                        this.moveDockerCaretToEnd(promptInput);
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        promptInput.textContent = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        promptInput.textContent = '';
+                    }
+                    this.moveDockerCaretToEnd(promptInput);
+                }
+            });
+        };
+
+        this.addTerminalLine(output, '5G WIRELESS LAB', 'info');
         this.addTerminalLine(output, 'Type "help" for available commands.', 'info');
         this.addTerminalLine(output, '', 'blank');
+
+        const initialPrompt = this.createDockerPromptLine();
+        output.appendChild(initialPrompt.line);
+        activePromptInput = initialPrompt.input;
+        attachInputHandlers(initialPrompt.input, initialPrompt.line);
+        this.focusDockerPrompt(initialPrompt.input);
+    }
+
+    createDockerPromptLine() {
+        const line = document.createElement('div');
+        line.className = 'docker-terminal-line docker-terminal-command docker-terminal-prompt-line docker-terminal-active-prompt';
+
+        const prompt = document.createElement('span');
+        prompt.className = 'docker-terminal-prompt';
+        prompt.textContent = 'docker@main$';
+
+        const input = document.createElement('span');
+        input.className = 'docker-terminal-live-input';
+        input.contentEditable = 'true';
+        input.spellcheck = false;
+        input.setAttribute('aria-label', 'Docker terminal command input');
+
+        line.appendChild(prompt);
+        line.appendChild(input);
+        return { line, input };
+    }
+
+    focusDockerPrompt(input) {
+        if (!input) return;
+        input.focus();
+        this.moveDockerCaretToEnd(input);
+    }
+
+    moveDockerCaretToEnd(el) {
+        const selection = window.getSelection();
+        if (!selection) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
     }
 
     normalizeCommand(command) {
@@ -206,6 +352,10 @@ class DockerTerminal {
         } else if (/^docker\s+stop\s+.+$/.test(cmd)) {
             const serviceName = args.slice(2).join(' ');
             await this.dockerStop(serviceName, output);
+        } else if (cmd === 'ls' || cmd === 'ls -la' || cmd === 'ls -l' || cmd === 'ls -a') {
+            this.showDirectoryListing(output, cmd);
+        } else if (cmd === 'vi docker-compose.yml' || cmd === 'vim docker-compose.yml' || cmd === 'cat docker-compose.yml') {
+            this.openViViewer(output);
         } else if (cmd === 'cls' || cmd === 'clear') {
             output.innerHTML = '';
         } else if (cmd === 'exit') {
@@ -291,6 +441,15 @@ class DockerTerminal {
             '  docker stop <service-name>',
             '    Stop a specific Network Function',
             '',
+            '  ls / ls -la',
+            '    List files in current directory',
+            '',
+            '  vi docker-compose.yml',
+            '    View docker-compose.yml file (read-only)',
+            '',
+            '  cat docker-compose.yml',
+            '    Print docker-compose.yml to terminal',
+            '',
             '  cls / clear',
             '    Clear the terminal screen',
             '',
@@ -302,6 +461,267 @@ class DockerTerminal {
             ''
         ];
         helpText.forEach(line => this.addTerminalLine(output, line, 'info'));
+    }
+
+    showDirectoryListing(output, cmd) {
+        const isLong = cmd.includes('-l') || cmd.includes('-a');
+        if (isLong) {
+            this.addTerminalLine(output, 'total 48', 'info');
+            this.addTerminalLine(output, 'drwxr-xr-x 3 root root 4096 Jan 30 10:00 .', 'info');
+            this.addTerminalLine(output, 'drwxr-xr-x 5 root root 4096 Jan 30 09:55 ..', 'info');
+            this.addTerminalLine(output, '-rw-r--r-- 1 root root 3842 Jan 30 10:00 docker-compose.yml', 'info');
+        } else {
+            this.addTerminalLine(output, 'docker-compose.yml', 'info');
+        }
+    }
+
+    getDockerComposeContent() {
+        return `services:
+  mysql:
+    container_name: "mysql"
+    image: ghcr.io/openairinterface/mysql:8.0
+    volumes:
+      - ./database/oai_db.sql:/docker-entrypoint-initdb.d/oai_db.sql
+      - ./healthscripts/mysql-healthcheck.sh:/tmp/mysql-healthcheck.sh
+    environment:
+      - TZ=Europe/Paris
+      - MYSQL_DATABASE=oai_db
+      - MYSQL_USER=test
+      - MYSQL_PASSWORD=test
+      - MYSQL_ROOT_PASSWORD=linux
+    healthcheck:
+      test: /bin/bash -c "/tmp/mysql-healthcheck.sh"
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.131
+
+  oai-udr:
+    container_name: "oai-udr"
+    image: ghcr.io/openairinterface/oai-udr:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+    volumes:
+      - ./conf/config.yaml:/openair-udr/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - mysql
+      - oai-nrf
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.136
+
+  oai-udm:
+    container_name: "oai-udm"
+    image: ghcr.io/openairinterface/oai-udm:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+    volumes:
+      - ./conf/config.yaml:/openair-udm/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - oai-udr
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.137
+
+  oai-ausf:
+    container_name: "oai-ausf"
+    image: ghcr.io/openairinterface/oai-ausf:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+    volumes:
+      - ./conf/config.yaml:/openair-ausf/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - oai-udm
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.138
+
+  oai-nrf:
+    container_name: "oai-nrf"
+    image: ghcr.io/openairinterface/oai-nrf:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+    volumes:
+      - ./conf/config.yaml:/openair-nrf/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.130
+
+  oai-amf:
+    container_name: "oai-amf"
+    image: ghcr.io/openairinterface/oai-amf:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+      - 38412/sctp
+    volumes:
+      - ./conf/config.yaml:/openair-amf/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - mysql
+      - oai-nrf
+      - oai-ausf
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.132
+
+  oai-smf:
+    container_name: "oai-smf"
+    image: ghcr.io/openairinterface/oai-smf:develop
+    expose:
+      - 80/tcp
+      - 8080/tcp
+      - 8805/udp
+    volumes:
+      - ./conf/config.yaml:/openair-smf/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - oai-nrf
+      - oai-amf
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.133
+
+  oai-upf:
+    container_name: "oai-upf"
+    image: ghcr.io/openairinterface/oai-upf:develop
+    expose:
+      - 80/tcp
+      - 2152/udp
+      - 8805/udp
+    volumes:
+      - ./conf/config.yaml:/openair-upf/etc/config.yaml
+    environment:
+      - TZ=Europe/Paris
+    depends_on:
+      - oai-nrf
+      - oai-smf
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    cap_drop:
+      - ALL
+    privileged: true
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.134
+
+  oai-traffic-server:
+    privileged: true
+    init: true
+    container_name: oai-ext-dn
+    image: ghcr.io/openairinterface/trf-gen-cn5g:latest
+    environment:
+      - UPF_FQDN=oai-upf
+      - UE_NETWORK=10.0.0.0/24
+      - USE_FQDN=yes
+    healthcheck:
+      test: /bin/bash -c "ip r | grep 12.1.1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      public_net:
+        ipv4_address: 192.168.70.135
+
+networks:
+  public_net:
+    driver: bridge
+    name: oaiworkshop
+    ipam:
+      config:
+        - subnet: 192.168.70.128/26
+    driver_opts:
+      com.docker.network.bridge.name: "oaiworkshop"`;
+    }
+
+    openViViewer(output) {
+        const content = document.getElementById('docker-terminal-content');
+        if (!content) return;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'vi-viewer-overlay';
+        overlay.id = 'vi-viewer-overlay';
+
+        const fileContent = document.createElement('div');
+        fileContent.className = 'vi-viewer-content';
+        fileContent.textContent = this.getDockerComposeContent();
+
+        const statusBar = document.createElement('div');
+        statusBar.className = 'vi-viewer-statusbar';
+        statusBar.innerHTML = '<span>"docker-compose.yml" [readonly]</span><span>Press :q to quit</span>';
+
+        const cmdLine = document.createElement('div');
+        cmdLine.className = 'vi-viewer-cmdline';
+        cmdLine.textContent = '';
+
+        overlay.appendChild(fileContent);
+        overlay.appendChild(statusBar);
+        overlay.appendChild(cmdLine);
+        content.appendChild(overlay);
+
+        let cmdBuffer = '';
+
+        const handleKey = (e) => {
+            // Always stop ALL keys from reaching the terminal
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
+            if (e.key === 'Escape') {
+                cmdBuffer = '';
+                cmdLine.textContent = '';
+                return;
+            }
+
+            if (e.key === ':' && cmdBuffer === '') {
+                cmdBuffer = ':';
+                cmdLine.textContent = ':';
+                return;
+            }
+
+            if (cmdBuffer.startsWith(':')) {
+                if (e.key === 'Enter') {
+                    if (cmdBuffer === ':q' || cmdBuffer === ':q!' || cmdBuffer === ':wq') {
+                        document.removeEventListener('keydown', handleKey, true);
+                        overlay.remove();
+                        // Refocus the active terminal input
+                        const inputs = output.querySelectorAll('.docker-terminal-live-input[contenteditable="true"]');
+                        if (inputs.length > 0) inputs[inputs.length - 1].focus();
+                    } else {
+                        cmdLine.textContent = `E492: Not an editor command: ${cmdBuffer.slice(1)}`;
+                        cmdBuffer = '';
+                    }
+                } else if (e.key === 'Backspace') {
+                    cmdBuffer = cmdBuffer.slice(0, -1);
+                    cmdLine.textContent = cmdBuffer || '';
+                } else if (e.key.length === 1) {
+                    cmdBuffer += e.key;
+                    cmdLine.textContent = cmdBuffer;
+                }
+            }
+        };
+
+        // Use capture phase so it fires before the terminal's handlers
+        document.addEventListener('keydown', handleKey, true);
+        overlay.setAttribute('tabindex', '0');
+        overlay.focus();
     }
 
     addTerminalLine(output, text, type = 'normal') {
@@ -342,6 +762,9 @@ class DockerTerminal {
     }
 
     getDefaultNFConfigurations() {
+        // Core NFs only — gNB and UE are NOT included here.
+        // gNB must be deployed separately via: docker compose -f docker-compose-gnb.yml up -d
+        // UE must be deployed manually from the canvas.
         return [
             { type: 'NRF', ipAddress: '192.168.1.10', port: 8080, httpProtocol: 'HTTP/2' },
             { type: 'AMF', ipAddress: '192.168.1.20', port: 8080, httpProtocol: 'HTTP/2' },
@@ -352,10 +775,16 @@ class DockerTerminal {
             { type: 'UDR', ipAddress: '192.168.1.70', port: 8080, httpProtocol: 'HTTP/2' },
             { type: 'PCF', ipAddress: '192.168.1.80', port: 8080, httpProtocol: 'HTTP/2' },
             { type: 'NSSF', ipAddress: '192.168.1.90', port: 8080, httpProtocol: 'HTTP/2' },
-            { type: 'MySQL', ipAddress: '192.168.1.100', port: 3306, httpProtocol: 'HTTP/2' },
-            { type: 'gNB', ipAddress: '192.168.1.21', port: 8089, httpProtocol: 'HTTP/2' },
-            { type: 'UE', ipAddress: '192.168.1.22', port: 8090, httpProtocol: 'HTTP/2' }
+            { type: 'MySQL', ipAddress: '192.168.1.100', port: 3306, httpProtocol: 'HTTP/2' }
         ];
+    }
+
+    getGNBDefaultConfiguration() {
+        return { type: 'gNB', ipAddress: '192.168.1.21', port: 8089, httpProtocol: 'HTTP/2' };
+    }
+
+    getUEDefaultConfiguration() {
+        return { type: 'UE', ipAddress: '192.168.1.22', port: 8090, httpProtocol: 'HTTP/2' };
     }
 
     async dockerComposeUp(output) {
@@ -461,6 +890,12 @@ class DockerTerminal {
             if (response.ok) topologyData = this.filterTopology(await response.json());
         } catch (e) { console.warn('Failed to load topology for NF positioning:', e); }
 
+        // Reconcile any already-existing NFs (manually deployed) against the topology bus
+        // so their bus connections point to the canonical topology bus ID
+        if (topologyData && window.dataStore) {
+            existingNFs.forEach(nf => this.ensureNFConnectedToBus(nf, topologyData));
+        }
+
         const serviceNameMap = { 'AMF': 'oai-amf', 'SMF': 'oai-smf', 'UPF': 'oai-upf', 'AUSF': 'oai-ausf', 'UDM': 'oai-udm', 'UDR': 'oai-udr', 'NRF': 'oai-nrf', 'PCF': 'oai-pcf', 'NSSF': 'oai-nssf', 'MySQL': 'mysql', 'ext-dn': 'oai-ext-dn' };
         for (const config of missingConfigs) {
             let topologyNF = topologyData?.nfs?.find(nf => nf.type === config.type) || null;
@@ -560,10 +995,36 @@ class DockerTerminal {
             Array.from(allLines).slice(initialLength).forEach(line => line.remove());
             this.showDockerComposePS(output);
         }, 1000);
+
+        // Document-level Ctrl+C so it works regardless of focus
+        this._watchCtrlCHandler = (e) => {
+            if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+                this.stopWatch();
+                this.addTerminalLine(output, '', 'blank');
+                this.addTerminalLine(output, '^C', 'info');
+                this.addTerminalLine(output, 'Watch mode stopped.', 'info');
+                this.addTerminalLine(output, '', 'blank');
+                // Create a new prompt after stopping
+                const next = this.createDockerPromptLine();
+                output.appendChild(next.line);
+                output.scrollTop = output.scrollHeight;
+                // Re-attach handlers via a small event so the terminal regains input
+                next.input.focus();
+                const event = new CustomEvent('docker-watch-stopped', { detail: { input: next.input, line: next.line } });
+                output.dispatchEvent(event);
+            }
+        };
+        document.addEventListener('keydown', this._watchCtrlCHandler);
     }
 
     stopWatch() {
-        if (this.watchInterval) { clearInterval(this.watchInterval); this.watchInterval = null; this.isWatching = false; }
+        if (this.watchInterval) { clearInterval(this.watchInterval); this.watchInterval = null; }
+        this.isWatching = false;
+        if (this._watchCtrlCHandler) {
+            document.removeEventListener('keydown', this._watchCtrlCHandler);
+            this._watchCtrlCHandler = null;
+        }
     }
 
     showDockerComposePS(output) {
@@ -607,7 +1068,7 @@ class DockerTerminal {
         }
         if (window.dataStore) {
             (window.dataStore.getAllBusConnections() || []).forEach(bc => window.dataStore.removeBusConnection(bc.id));
-            (window.dataStore.getAllBuses() || []).forEach(bus => window.dataStore.removeBus(bus.id));
+            // Preserve the service bus structure so the topology remains visible after stopping containers.
         }
         this.addTerminalLine(output, ` ✔ Network oaiworkshop Removed${' '.repeat(20)}0.2s`, 'success');
         this.oaiWorkshopNetworkExists = false;
@@ -653,7 +1114,52 @@ class DockerTerminal {
                 updatedNF.status = 'stable';
                 updatedNF.statusTimestamp = Date.now();
                 window.dataStore.updateNF(updatedNF.id, updatedNF);
-                if (updatedNF.type === 'UPF') window.dockerTerminal.autoConnectUPFToSMFAndExtDn(updatedNF);
+                
+                // Trigger auto-connections for specific NF types
+                if (updatedNF.type === 'UPF') {
+                    window.dockerTerminal.autoConnectUPFToSMFAndExtDn(updatedNF);
+                } else if (updatedNF.type === 'gNB' || updatedNF.type === 'UE' || updatedNF.type === 'MySQL' || updatedNF.type === 'ext-dn' || updatedNF.type === 'UDM' || updatedNF.type === 'UDR') {
+                    // Schedule auto-connections after 3-5 seconds
+                    const autoConnectDelay = 3000 + Math.random() * 2000;
+                    setTimeout(() => {
+                        if (window.nfManager) {
+                            window.nfManager.attemptAutoConnections(updatedNF);
+                            
+                            // BIDIRECTIONAL: When MySQL becomes stable, also trigger UDR to reconnect
+                            if (updatedNF.type === 'MySQL') {
+                                const allNFs = window.dataStore.getAllNFs();
+                                const sourceNetwork = window.nfManager.getNetworkFromIP(updatedNF.config.ipAddress);
+                                const udrInSameSubnet = allNFs.find(otherNf => 
+                                    otherNf.id !== updatedNF.id && 
+                                    otherNf.status === 'stable' &&
+                                    otherNf.type === 'UDR' &&
+                                    window.nfManager.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                                );
+                                if (udrInSameSubnet) {
+                                    console.log(`🔗 [Docker Start] Triggering UDR ${udrInSameSubnet.name} to reconnect to MySQL ${updatedNF.name}`);
+                                    setTimeout(() => window.nfManager.attemptAutoConnections(udrInSameSubnet), 1000);
+                                }
+                            }
+                            
+                            // BIDIRECTIONAL: When UDR becomes stable, also trigger MySQL to reconnect
+                            if (updatedNF.type === 'UDR') {
+                                const allNFs = window.dataStore.getAllNFs();
+                                const sourceNetwork = window.nfManager.getNetworkFromIP(updatedNF.config.ipAddress);
+                                const mysqlInSameSubnet = allNFs.find(otherNf => 
+                                    otherNf.id !== updatedNF.id && 
+                                    otherNf.status === 'stable' &&
+                                    otherNf.type === 'MySQL' &&
+                                    window.nfManager.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                                );
+                                if (mysqlInSameSubnet) {
+                                    console.log(`🔗 [Docker Start] Triggering MySQL ${mysqlInSameSubnet.name} to reconnect to UDR ${updatedNF.name}`);
+                                    setTimeout(() => window.nfManager.attemptAutoConnections(mysqlInSameSubnet), 1000);
+                                }
+                            }
+                        }
+                    }, autoConnectDelay);
+                }
+                
                 if (window.canvasRenderer) window.canvasRenderer.render();
             }
         }, 5000);
@@ -762,11 +1268,35 @@ class DockerTerminal {
         const topologyNFs = filteredTopology.nfs || [];
         const connsForThisNF = busConnections.filter(bc => bc.nfId === nf.id || (topologyNFs.find(n => n.id === bc.nfId) && topologyNFs.find(n => n.id === bc.nfId).type === nf.type));
         for (const busConn of connsForThisNF) {
-            const bus = buses.find(b => b.id === busConn.busId);
-            if (!bus) continue;
-            if (!window.dataStore.getBusById(bus.id)) window.dataStore.addBus(JSON.parse(JSON.stringify(bus)));
-            const exists = (window.dataStore.getAllBusConnections() || []).some(c => c.nfId === nf.id && c.busId === busConn.busId);
-            if (!exists) window.dataStore.addBusConnection({ id: busConn.id || `bus-conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, nfId: nf.id, busId: busConn.busId, type: busConn.type || 'bus-connection', interfaceName: busConn.interfaceName, protocol: busConn.protocol || 'HTTP/2', status: busConn.status || 'connected', createdAt: busConn.createdAt || Date.now() });
+            const topologyBus = buses.find(b => b.id === busConn.busId);
+            if (!topologyBus) continue;
+
+            // Check if a bus of the same type already exists (may have a different ID if created manually)
+            let existingBus = window.dataStore.getBusById(topologyBus.id);
+            if (!existingBus) {
+                existingBus = (window.dataStore.getAllBuses() || []).find(b => b.type === topologyBus.type || b.name === topologyBus.name);
+            }
+
+            let activeBusId;
+            if (existingBus) {
+                // Reuse the existing bus — remove it and replace with the canonical topology one
+                // so its ID, position and length are correct
+                if (existingBus.id !== topologyBus.id) {
+                    // Migrate all existing bus-connections to the topology bus ID
+                    (window.dataStore.getAllBusConnections() || [])
+                        .filter(c => c.busId === existingBus.id)
+                        .forEach(c => { c.busId = topologyBus.id; });
+                    window.dataStore.removeBus(existingBus.id);
+                    window.dataStore.addBus(JSON.parse(JSON.stringify(topologyBus)));
+                }
+                activeBusId = topologyBus.id;
+            } else {
+                window.dataStore.addBus(JSON.parse(JSON.stringify(topologyBus)));
+                activeBusId = topologyBus.id;
+            }
+
+            const exists = (window.dataStore.getAllBusConnections() || []).some(c => c.nfId === nf.id && c.busId === activeBusId);
+            if (!exists) window.dataStore.addBusConnection({ id: busConn.id || `bus-conn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, nfId: nf.id, busId: activeBusId, type: busConn.type || 'bus-connection', interfaceName: busConn.interfaceName, protocol: busConn.protocol || 'HTTP/2', status: busConn.status || 'connected', createdAt: busConn.createdAt || Date.now() });
         }
     }
 
@@ -777,13 +1307,18 @@ class DockerTerminal {
         if (!window.dataStore || !window.nfManager) { this.addTerminalLine(output, 'Error: System not initialized. Please refresh the page.', 'error'); return; }
         const allNFs = window.dataStore.getAllNFs();
         const existingNF = allNFs.find(nf => nf.type === nfType);
-        if (existingNF) { this.addTerminalLine(output, `Error: ${nfType} already exists!`, 'error'); return; }
+        if (existingNF) { this.addTerminalLine(output, `? ${nfType} (${existingNF.name}) is already deployed. Each NF can only be deployed once.`, 'error'); return; }
         const isFirstNF = allNFs.length === 0;
         if (isFirstNF) { this.addTerminalLine(output, `[+] Running 2/2`, 'info'); this.addTerminalLine(output, ' ✔ Network oaiworkshop Created' + ' '.repeat(20) + '0.2s', 'success'); this.oaiWorkshopNetworkExists = true; this.oaiWorkshopCreatedTime = Date.now(); await this.delay(200); } else { this.addTerminalLine(output, `[+] Running 1/1`, 'info'); }
         let topologyNF = null;
         let filteredTopology = null;
-        try { const response = await fetch(this.topologySource); if (response.ok) { const topology = await response.json(); filteredTopology = this.filterTopology(topology); topologyNF = filteredTopology.nfs?.find(nf => nf.type === nfType); } } catch (e) { console.warn('Failed to load topology', e); }
-        const defaultConfig = this.getDefaultNFConfigurations().find(cfg => cfg.type === nfType);
+        try { const response = await fetch(this.topologySource); if (response.ok) { const topology = await response.json(); filteredTopology = this.filterTopology(topology); topologyNF = (nfType === 'gNB' || nfType === 'UE') ? (topology.nfs?.find(nf => nf.type === nfType) || null) : filteredTopology.nfs?.find(nf => nf.type === nfType); } } catch (e) { console.warn('Failed to load topology', e); }
+        const allConfigs = [
+            ...this.getDefaultNFConfigurations(),
+            this.getGNBDefaultConfiguration(),
+            this.getUEDefaultConfiguration()
+        ];
+        const defaultConfig = allConfigs.find(cfg => cfg.type === nfType);
         let nf;
         if (topologyNF) {
             const posX = topologyNF.position?.x ?? topologyNF.x ?? 100;
@@ -793,7 +1328,7 @@ class DockerTerminal {
             if (window.canvasRenderer) window.canvasRenderer.render();
             if (nf.icon) { const img = new Image(); const iconSrc = nf.icon.startsWith('http') ? nf.icon : new URL(nf.icon, window.location.href).href; img.src = iconSrc; img.onload = () => { nf.iconImage = img; if (window.canvasRenderer) window.canvasRenderer.render(); }; img.onerror = () => { img.src = new URL(`images/icons/${nf.type.toLowerCase()}.svg`, window.location.href).href; }; }
             if (window.logEngine) window.logEngine.onNFAdded(nf);
-            if (filteredTopology && window.dataStore) { this.removeAllBusesAndBusConnections(); window.dataStore.getAllNFs().forEach(existingNF => this.ensureNFConnectedToBus(existingNF, filteredTopology)); if (window.canvasRenderer) window.canvasRenderer.render(); }
+            if (filteredTopology && window.dataStore) { window.dataStore.getAllNFs().forEach(existingNF => this.ensureNFConnectedToBus(existingNF, filteredTopology)); if (window.canvasRenderer) window.canvasRenderer.render(); }
         } else {
             const position = window.nfManager.calculateAutoPosition(nfType, allNFs.length + 1);
             nf = window.nfManager.createNetworkFunction(nfType, position);
@@ -812,7 +1347,60 @@ class DockerTerminal {
         if (window.logEngine) window.logEngine.addLog(nf.id, 'INFO', `${nf.name} starting via docker compose`, { ipAddress: nf.config.ipAddress, port: nf.config.port, protocol: nf.config.httpProtocol, status: 'starting', source: 'docker-compose' });
         setTimeout(() => {
             const updatedNF = window.dataStore?.getNFById(nf.id);
-            if (updatedNF) { updatedNF.status = 'stable'; updatedNF.statusTimestamp = Date.now(); if (!updatedNF.createdAt && nf.createdAt) updatedNF.createdAt = nf.createdAt; window.dataStore.updateNF(updatedNF.id, updatedNF); if (window.logEngine) window.logEngine.addLog(updatedNF.id, 'SUCCESS', `${updatedNF.name} is now STABLE and ready for connections`, { previousStatus: 'starting', newStatus: 'stable', uptime: '5 seconds', readyForConnections: true }); if (updatedNF.type === 'UPF') window.dockerTerminal.autoConnectUPFToSMFAndExtDn(updatedNF); if (window.canvasRenderer) window.canvasRenderer.render(); }
+            if (updatedNF) { 
+                updatedNF.status = 'stable'; 
+                updatedNF.statusTimestamp = Date.now(); 
+                if (!updatedNF.createdAt && nf.createdAt) updatedNF.createdAt = nf.createdAt; 
+                window.dataStore.updateNF(updatedNF.id, updatedNF); 
+                if (window.logEngine) window.logEngine.addLog(updatedNF.id, 'SUCCESS', `${updatedNF.name} is now STABLE and ready for connections`, { previousStatus: 'starting', newStatus: 'stable', uptime: '5 seconds', readyForConnections: true }); 
+                
+                // Trigger auto-connections for specific NF types
+                if (updatedNF.type === 'UPF') {
+                    window.dockerTerminal.autoConnectUPFToSMFAndExtDn(updatedNF);
+                } else if (updatedNF.type === 'gNB' || updatedNF.type === 'UE' || updatedNF.type === 'MySQL' || updatedNF.type === 'ext-dn' || updatedNF.type === 'UDM' || updatedNF.type === 'UDR') {
+                    // Schedule auto-connections after 3-5 seconds
+                    const autoConnectDelay = 3000 + Math.random() * 2000;
+                    setTimeout(() => {
+                        if (window.nfManager) {
+                            window.nfManager.attemptAutoConnections(updatedNF);
+                            
+                            // BIDIRECTIONAL: When MySQL becomes stable, also trigger UDR to reconnect
+                            if (updatedNF.type === 'MySQL') {
+                                const allNFs = window.dataStore.getAllNFs();
+                                const sourceNetwork = window.nfManager.getNetworkFromIP(updatedNF.config.ipAddress);
+                                const udrInSameSubnet = allNFs.find(otherNf => 
+                                    otherNf.id !== updatedNF.id && 
+                                    otherNf.status === 'stable' &&
+                                    otherNf.type === 'UDR' &&
+                                    window.nfManager.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                                );
+                                if (udrInSameSubnet) {
+                                    console.log(`🔗 [Docker] Triggering UDR ${udrInSameSubnet.name} to reconnect to new MySQL ${updatedNF.name}`);
+                                    setTimeout(() => window.nfManager.attemptAutoConnections(udrInSameSubnet), 1000);
+                                }
+                            }
+                            
+                            // BIDIRECTIONAL: When UDR becomes stable, also trigger MySQL to reconnect
+                            if (updatedNF.type === 'UDR') {
+                                const allNFs = window.dataStore.getAllNFs();
+                                const sourceNetwork = window.nfManager.getNetworkFromIP(updatedNF.config.ipAddress);
+                                const mysqlInSameSubnet = allNFs.find(otherNf => 
+                                    otherNf.id !== updatedNF.id && 
+                                    otherNf.status === 'stable' &&
+                                    otherNf.type === 'MySQL' &&
+                                    window.nfManager.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                                );
+                                if (mysqlInSameSubnet) {
+                                    console.log(`🔗 [Docker] Triggering MySQL ${mysqlInSameSubnet.name} to reconnect to new UDR ${updatedNF.name}`);
+                                    setTimeout(() => window.nfManager.attemptAutoConnections(mysqlInSameSubnet), 1000);
+                                }
+                            }
+                        }
+                    }, autoConnectDelay);
+                }
+                
+                if (window.canvasRenderer) window.canvasRenderer.render(); 
+            }
         }, 5000);
         this.addTerminalLine(output, '', 'blank');
         this.addTerminalLine(output, `✅ ${nfType} deployed successfully on network oaiworkshop (${nf.config.ipAddress})`, 'success');
@@ -846,63 +1434,30 @@ class DockerTerminal {
 
     setupWindowControls(terminalModal) {
         const terminalWindow = document.getElementById('docker-terminal-window');
-        const titlebar = document.getElementById('docker-terminal-titlebar');
-        const minimizeBtn = document.getElementById('docker-terminal-minimize');
-        const maximizeBtn = document.getElementById('docker-terminal-maximize');
         const resizeHandle = document.getElementById('docker-terminal-resize-handle');
-        if (!terminalWindow || !titlebar) return;
-        let isDragging = false, dragStartX = 0, dragStartY = 0, windowStartX = 0, windowStartY = 0;
-        titlebar.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.docker-terminal-btn') || this.terminalState.isMaximized) return;
-            isDragging = true;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            const rect = terminalWindow.getBoundingClientRect();
-            windowStartX = rect.left;
-            windowStartY = rect.top;
-            titlebar.style.cursor = 'grabbing';
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - dragStartX, deltaY = e.clientY - dragStartY;
-            const newX = windowStartX + deltaX, newY = windowStartY + deltaY;
-            const maxX = window.innerWidth - terminalWindow.offsetWidth, maxY = window.innerHeight - terminalWindow.offsetHeight;
-            this.terminalState.x = Math.max(0, Math.min(newX, maxX));
-            this.terminalState.y = Math.max(0, Math.min(newY, maxY));
-            terminalWindow.style.left = this.terminalState.x + 'px';
-            terminalWindow.style.top = this.terminalState.y + 'px';
-            terminalWindow.style.transform = 'none';
-        });
-        document.addEventListener('mouseup', () => {
-            if (isDragging) { isDragging = false; titlebar.style.cursor = 'grab'; this.saveTerminalState(); }
-        });
+        if (!terminalWindow || !resizeHandle) return;
+
         let isResizing = false, resizeStartX = 0, resizeStartY = 0, startWidth = 0, startHeight = 0;
-        if (resizeHandle) {
-            resizeHandle.addEventListener('mousedown', (e) => {
-                if (this.terminalState.isMaximized) return;
-                isResizing = true;
-                resizeStartX = e.clientX;
-                resizeStartY = e.clientY;
-                startWidth = terminalWindow.offsetWidth;
-                startHeight = terminalWindow.offsetHeight;
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        }
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizeStartX = e.clientX;
+            resizeStartY = e.clientY;
+            startWidth = terminalWindow.offsetWidth;
+            startHeight = terminalWindow.offsetHeight;
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
-            const deltaX = e.clientX - resizeStartX, deltaY = e.clientY - resizeStartY;
-            this.terminalState.width = Math.max(400, Math.min(startWidth + deltaX, window.innerWidth - 100));
-            this.terminalState.height = Math.max(300, Math.min(startHeight + deltaY, window.innerHeight - 100));
-            terminalWindow.style.width = this.terminalState.width + 'px';
-            terminalWindow.style.height = this.terminalState.height + 'px';
+            const deltaX = e.clientX - resizeStartX;
+            const deltaY = e.clientY - resizeStartY;
+            terminalWindow.style.width = Math.max(400, startWidth + deltaX) + 'px';
+            terminalWindow.style.height = Math.max(300, startHeight + deltaY) + 'px';
         });
-        document.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; this.saveTerminalState(); } });
-        if (minimizeBtn) minimizeBtn.addEventListener('click', () => this.minimizeTerminal(terminalWindow));
-        if (maximizeBtn) maximizeBtn.addEventListener('click', () => this.toggleMaximize(terminalWindow));
-        titlebar.addEventListener('dblclick', (e) => { if (!e.target.closest('.docker-terminal-btn')) this.toggleMaximize(terminalWindow); });
-        titlebar.style.cursor = 'grab';
+
+        document.addEventListener('mouseup', () => { isResizing = false; });
     }
 
     minimizeTerminal(terminalWindow) {
