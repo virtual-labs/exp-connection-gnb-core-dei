@@ -1,3 +1,12 @@
-1. Ma, L., Wen, X., Wang, L., Lu, Z., & Knopp, R. (2018). An SDN/NFV based framework for management and deployment of service based 5G core network. China Communications, 15(10), 86-98.
-2. Djuitcheu, H., Alam, K., Sergeev, A., Spinty, F., Autenrieth, A., Elbers, J. P., & Seitz, J. (2025, November). Industrial Open RAN Deployment: A Comparative Performance Evaluation of Open and Commercial gNBs. In 2025 IEEE Future Networks World Forum (FNWF) (pp. 1-6). IEEE.
-3. Launay, F. (2021). NG-RAN and 5G-NR: 5G radio access network and radio interface. John Wiley & Sons.
+<div style="font-family: 'Times New Roman', Times, serif; font-size: 12pt;">
+
+1. #### An SDN/NFV Based Framework for Management and Deployment of Service Based 5G Core Network
+https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8485472
+
+2. #### Performance Evaluation of Industrial O-RAN: A Comparative Analysis of gNB Providers
+https://www.techrxiv.org/users/691340/articles/1285613-performance-evaluation-of-industrial-o-ran-a-comparative-analysis-of-gnb-providers
+
+3. #### Industrial Open RAN Deployment: A Comparative Performance Evaluation of Open and Commercial gNBs
+https://ieeexplore.ieee.org/abstract/document/11317218
+
+</div>

@@ -5,7 +5,6 @@ The 5G New Radio (NR) system requires proper connectivity between the Radio Acce
 - **NG Setup Procedure**: Establishes the control plane connection between gNodeB (gNB) and Access and Mobility Management Function (AMF)
 - **N3 Interface Activation**: Enables user plane data transmission between gNB and User Plane Function (UPF)
 
----
 
 ## 2. 5G System Architecture Overview
 
@@ -38,10 +37,6 @@ The 5G New Radio (NR) system requires proper connectivity between the Radio Acce
 <img src="images/fig2.svg" alt="NG Interface Components" width="45%">
 
 *Fig: NG Interface Components*
-
----
-<details>
-<summary><strong>3. NG Setup Procedure</strong></summary>
 
 ## 3. NG Setup Procedure
 
@@ -160,7 +155,7 @@ NG SETUP RESPONSE
 
 <img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
 
-*Figu: NGAP Protocol Stack*
+*Fig: NGAP Protocol Stack*
 
 **Layers:**
 - **NGAP**: Application layer for NG-C signaling
@@ -168,13 +163,7 @@ NG SETUP RESPONSE
 - **IP**: Network layer routing
 - **Ethernet**: Physical connectivity
 
----
-</details>
-
-
-<details>
-<summary><strong>4. N3 Interface and ActivationNG Setup Procedure</strong></summary>
-## 4. N3 Interface and Activation
+## 4. N3 Interface and ActivationNG Setup Procedure
 
 ### 4.1 N3 Interface Overview
 
@@ -277,7 +266,7 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 ### 4.5 N3 Protocol Stack
 
-<img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="45%">
+<img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="40%">
 
 *Fig: N3 Interface Protocol Stack*
 
@@ -334,16 +323,12 @@ PDU SESSION RESOURCE SETUP RESPONSE
   - Downlink: DL TEID assigned by gNB
   - Used to identify PDU session
 
----
-</details>
 
-<details>
-<summary><strong>5. Relationship Between NG Setup and N3</strong></summary>
 ## 5. Relationship Between NG Setup and N3
 
 ### 5.1 Dependency
 
-<img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="45%">
+<img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="35%">
 
 *Fig: NG Setup to N3 Activation Flow*
 
@@ -374,11 +359,6 @@ PDU SESSION RESOURCE SETUP RESPONSE
 4. **Data Communication**
    - User data flows: UE ↔ gNB ↔ N3 ↔ UPF ↔ Data Network
 
----
-</details>
-
-<details>
-<summary><strong>6. Summary</strong></summary>
 ## 6. Summary
 
 ### 6.1 NG Setup
@@ -408,6 +388,3 @@ PDU SESSION RESOURCE SETUP RESPONSE
 - **NG Setup**: Foundation for all signaling; enables UE connection
 - **N3 Interface**: Carries actual user traffic; impacts user experience
 - **Together**: Enable complete 5G connectivity (control + data)
-
----
-</details>

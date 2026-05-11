@@ -1,8 +1,11 @@
 {
   "version": 2.0,
+  "filters": {
+    "difficulty": ["beginner", "intermediate"]
+  },
   "questions": [
     {
-      "question": "Which protocol performs the first signaling exchange between the gNB and AMF during the NG Setup procedure?",
+      "question": "Q1. Which protocol performs the first signaling exchange between the gNB and AMF during the NG Setup procedure?",
       "answers": {
         "a": "GTP-U",
         "b": "NGAP",
@@ -19,7 +22,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Before sending the NG Setup Request, what must be established between the gNB and AMF?",
+      "question": "Q2. Before sending the NG Setup Request, what must be established between the gNB and AMF?",
       "answers": {
         "a": "UDP association",
         "b": "GTP-U tunnel",
@@ -33,10 +36,10 @@
         "d": "Incorrect — NGAP does not use TCP."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "Which field in the NG Setup Request identifies the tracking location of the gNB?",
+      "question": "Q3. Which field in the NG Setup Request identifies the tracking location of the gNB?",
       "answers": {
         "a": "GUAMI",
         "b": "TAC",
@@ -53,7 +56,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "The NG Setup Response message contains which of the following to identify the core network’s identity and region?",
+      "question": "Q4. The NG Setup Response message contains which of the following to identify the core network’s identity and region?",
       "answers": {
         "a": "PLMN Identity",
         "b": "S-NSSAI",
@@ -70,7 +73,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What is the primary purpose of the N3 interface?",
+      "question": "Q5. What is the primary purpose of the N3 interface?",
       "answers": {
         "a": "Authentication of UE",
         "b": "Control plane signaling",
@@ -84,10 +87,10 @@
         "d": "Incorrect — Paging is part of control plane signaling."
       },
       "correctAnswer": "c",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "Which port does GTP-U use for transporting user plane packets?",
+      "question": "Q6. Which port does GTP-U use for transporting user plane packets?",
       "answers": {
         "a": "38412",
         "b": "2152",
@@ -104,7 +107,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "The Tunnel Endpoint Identifier (TEID) is used to:",
+      "question": "Q7. The Tunnel Endpoint Identifier (TEID) is used to:",
       "answers": {
         "a": "Specify UE identity",
         "b": "Identify the PDU session in GTP-U tunnels",
@@ -118,10 +121,10 @@
         "d": "Incorrect — PLMN configuration is independent of TEID."
       },
       "correctAnswer": "b",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "During PDU Session Resource Setup, the UL TEID is provided by:",
+      "question": "Q8. During PDU Session Resource Setup, the UL TEID is provided by:",
       "answers": {
         "a": "AMF",
         "b": "UPF",
@@ -138,7 +141,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Which message initiates the activation of the N3 interface?",
+      "question": "Q9. Which message initiates the activation of the N3 interface?",
       "answers": {
         "a": "NG Setup Request",
         "b": "PDU Session Resource Setup Request",
@@ -155,7 +158,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "The default paging DRX value in the NG Setup Request is used to define:",
+      "question": "Q10. The default paging DRX value in the NG Setup Request is used to define:",
       "answers": {
         "a": "UE slice type",
         "b": "Paging interval for idle UEs",
@@ -172,7 +175,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "Which protocol stack is used for NGAP messages between gNB and AMF?",
+      "question": "Q11. Which protocol stack is used for NGAP messages between gNB and AMF?",
       "answers": {
         "a": "NGAP → UDP → IP → Ethernet",
         "b": "NGAP → SCTP → IP → Ethernet",
@@ -186,10 +189,10 @@
         "d": "Incorrect — GTP-U carries user-plane traffic, not signaling."
       },
       "correctAnswer": "b",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "In uplink data flow, GTP-U packets from the gNB are encapsulated using which outer source and destination IP addresses?",
+      "question": "Q12. In uplink data flow, GTP-U packets from the gNB are encapsulated using which outer source and destination IP addresses?",
       "answers": {
         "a": "gNB → UE",
         "b": "UE → UPF",
@@ -206,7 +209,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "What part of the PDU session setup message indicates the slice being used?",
+      "question": "Q13. What part of the PDU session setup message indicates the slice being used?",
       "answers": {
         "a": "PLMN ID",
         "b": "S-NSSAI",
@@ -220,10 +223,10 @@
         "d": "Incorrect — GUAMI identifies AMF region and instance."
       },
       "correctAnswer": "b",
-      "difficulty": "beginner"
+      "difficulty": "intermediate"
     },
     {
-      "question": "Which component in the 5G Core is primarily responsible for session management and TEID allocation?",
+      "question": "Q14. Which component in the 5G Core is primarily responsible for session management and TEID allocation?",
       "answers": {
         "a": "AMF",
         "b": "SMF",
@@ -240,7 +243,7 @@
       "difficulty": "beginner"
     },
     {
-      "question": "In the SBA Simulator Dashboard, what is the correct sequence to start the 5G network functions?",
+      "question": "Q15. In the SBA Simulator Dashboard, what is the correct sequence to start the 5G network functions?",
       "answers": {
         "a": "Start gNB first, then core NFs",
         "b": "Start all core NFs, then gNB",

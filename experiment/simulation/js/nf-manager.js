@@ -32,6 +32,70 @@ class NFManager {
         };
 
         console.log('✅ NFManager initialized');
+        
+        // Start periodic connection checker for MySQL-UDR
+        this.startPeriodicConnectionChecker();
+    }
+
+    /**
+     * Periodic checker to ensure MySQL and UDR are always connected when both exist
+     */
+    startPeriodicConnectionChecker() {
+        setInterval(() => {
+            this.ensureMySQLUDRConnection();
+        }, 2000); // Check every 2 seconds
+    }
+
+    /**
+     * Ensure MySQL and UDR are connected if both exist on canvas
+     */
+    ensureMySQLUDRConnection() {
+        if (!window.dataStore || !window.connectionManager) return;
+
+        const allNFs = window.dataStore.getAllNFs();
+        const stableNFs = allNFs.filter(nf => nf.status === 'stable');
+
+        // Find all MySQL and UDR instances
+        const mysqlNFs = stableNFs.filter(nf => nf.type === 'MySQL');
+        const udrNFs = stableNFs.filter(nf => nf.type === 'UDR');
+
+        // For each MySQL, check if there's a UDR in the same subnet
+        mysqlNFs.forEach(mysql => {
+            const mysqlNetwork = this.getNetworkFromIP(mysql.config.ipAddress);
+            
+            // Find UDR in same subnet
+            const udrInSameSubnet = udrNFs.find(udr => 
+                this.getNetworkFromIP(udr.config.ipAddress) === mysqlNetwork
+            );
+
+            if (udrInSameSubnet) {
+                // Check if they're already connected
+                const mysqlConnections = window.dataStore.getConnectionsForNF(mysql.id);
+                const alreadyConnected = mysqlConnections.some(conn => 
+                    conn.sourceId === udrInSameSubnet.id || conn.targetId === udrInSameSubnet.id
+                );
+
+                if (!alreadyConnected) {
+                    // Create connection
+                    console.log(`🔗 [Auto-Checker] Connecting MySQL ${mysql.name} ↔ UDR ${udrInSameSubnet.name}`);
+                    const connection = window.connectionManager.createManualConnection(mysql.id, udrInSameSubnet.id);
+                    
+                    if (connection && window.logEngine) {
+                        window.logEngine.addLog(mysql.id, 'SUCCESS',
+                            `Auto-connected to ${udrInSameSubnet.name} (interface: ${connection.interfaceName})`, {
+                            targetType: udrInSameSubnet.type,
+                            interface: connection.interfaceName,
+                            autoConnection: true,
+                            reason: 'Periodic connection checker - MySQL and UDR must be connected'
+                        });
+                    }
+
+                    if (window.canvasRenderer) {
+                        window.canvasRenderer.render();
+                    }
+                }
+            }
+        });
     }
 
     /**
@@ -193,7 +257,11 @@ class NFManager {
 
         // Add to data store
         if (window.dataStore) {
-            window.dataStore.addNF(nf);
+            const added = window.dataStore.addNF(nf);
+            if (!added) {
+                console.warn(`⚠️ NFManager: ${nf.type} already exists, cannot create duplicate`);
+                return null;
+            }
         } else {
             console.error('❌ DataStore not available!');
             return null;
@@ -844,16 +912,50 @@ class NFManager {
 
                 console.log(`✅ ${nf.name} is now STABLE`);
 
-                // AUTO-CONNECTIONS: Enabled for MySQL, gNB, UE, UPF, ext-dn, and UDM
-                if (nf.type === 'MySQL' || nf.type === 'gNB' || nf.type === 'UE' || nf.type === 'UPF' || nf.type === 'ext-dn' || nf.type === 'UDM') {
+                // AUTO-CONNECTIONS: Enabled for MySQL, gNB, UE, UPF, ext-dn, UDM, and UDR
+                if (nf.type === 'MySQL' || nf.type === 'gNB' || nf.type === 'UE' || nf.type === 'UPF' || nf.type === 'ext-dn' || nf.type === 'UDM' || nf.type === 'UDR') {
                     // Schedule auto-connections after 8-10 seconds total
                     const autoConnectDelay = 3000 + Math.random() * 2000; // 3-5 more seconds
                     setTimeout(() => {
                         this.attemptAutoConnections(nf);
+                        
+                        // BIDIRECTIONAL: When MySQL becomes stable, also trigger UDR to reconnect
+                        if (nf.type === 'MySQL') {
+                            const allNFs = window.dataStore.getAllNFs();
+                            const sourceNetwork = this.getNetworkFromIP(nf.config.ipAddress);
+                            const udrInSameSubnet = allNFs.find(otherNf => 
+                                otherNf.id !== nf.id && 
+                                otherNf.status === 'stable' &&
+                                otherNf.type === 'UDR' &&
+                                this.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                            );
+                            if (udrInSameSubnet) {
+                                console.log(`🔗 Triggering UDR ${udrInSameSubnet.name} to reconnect to new MySQL ${nf.name}`);
+                                setTimeout(() => this.attemptAutoConnections(udrInSameSubnet), 1000);
+                            }
+                        }
+                        
+                        // BIDIRECTIONAL: When UDR becomes stable, also trigger MySQL to reconnect
+                        if (nf.type === 'UDR') {
+                            const allNFs = window.dataStore.getAllNFs();
+                            const sourceNetwork = this.getNetworkFromIP(nf.config.ipAddress);
+                            const mysqlInSameSubnet = allNFs.find(otherNf => 
+                                otherNf.id !== nf.id && 
+                                otherNf.status === 'stable' &&
+                                otherNf.type === 'MySQL' &&
+                                this.getNetworkFromIP(otherNf.config.ipAddress) === sourceNetwork
+                            );
+                            if (mysqlInSameSubnet) {
+                                console.log(`🔗 Triggering MySQL ${mysqlInSameSubnet.name} to reconnect to new UDR ${nf.name}`);
+                                setTimeout(() => this.attemptAutoConnections(mysqlInSameSubnet), 1000);
+                            }
+                        }
                     }, autoConnectDelay);
                     
                     if (nf.type === 'MySQL') {
                         console.log(`🔗 Auto-connections enabled for ${nf.name} - will connect to UDR automatically`);
+                    } else if (nf.type === 'UDR') {
+                        console.log(`🔗 Auto-connections enabled for ${nf.name} - will connect to NRF and MySQL automatically`);
                     } else if (nf.type === 'gNB') {
                         console.log(`🔗 Auto-connections enabled for ${nf.name} - will connect to AMF and UPF automatically`);
                     } else if (nf.type === 'UE') {
@@ -1222,7 +1324,7 @@ class NFManager {
             'UDM': ['NRF', 'UDR'],  // UDM connects to UDR for subscriber profile management
             'PCF': ['NRF'],
             'NSSF': ['NRF'],
-            'UDR': ['NRF', 'UDM'],  // UDR connects to UDM and MySQL
+            'UDR': ['MySQL'],  // UDR connects to MySQL only (NRF connection is through service bus)
             'gNB': ['AMF', 'UPF'],  // gNB connects to AMF and UPF when available
             'UE': ['gNB', 'AMF'], // UE connects to gNB and AMF when available (no direct UPF connection)
             'MySQL': ['UDR'], // MySQL connects to UDR (database backend)
@@ -1240,7 +1342,7 @@ class NFManager {
             case 'starting': return '#e74c3c'; // Red
             case 'stable': return '#2ecc71';   // Green
             case 'error': return '#e67e22';    // Orange
-            case 'stopped': return '#95a5a6';  // Gray
+            case 'stopped': return '#e74c3c';  // Red (stopped services)
             default: return '#3498db';         // Blue
         }
     }
