@@ -1,0 +1,2636 @@
+/**
+ * ============================================
+ * UI CONTROLLER
+ * ============================================
+ * Manages all user interface interactions and updates
+ * 
+ * Responsibilities:
+ * - Handle button clicks
+ * - Manage modals
+ * - Update configuration panel
+ * - Display logs in UI
+ * - Handle connection mode (source/destination selection)
+ * - File save/load operations
+ */
+
+class UIController {
+    constructor() {
+        this.connectionMode = 'idle'; // 'idle', 'selecting-source', 'selecting-destination'
+        this.selectedSourceNF = null;
+        this.selectedDestinationNF = null;
+
+        console.log('✅ UIController initialized');
+    }
+
+    /**
+     * Initialize all UI components and event listeners
+     */
+    init() {
+        console.log('🎮 Initializing UI...');
+
+        // Setup all button handlers
+        this.setupOneClickDeployButton();
+        this.setupTerminalButton();
+        this.setupAddNFButton();
+        this.setupClearButton();
+        this.setupValidateButton();
+        this.setupHelpButton();
+        this.setupConnectionButtons();
+        this.setupNFPalette();
+        this.setupConfigPanelToggle();
+
+        // Initialize log panel
+        this.initializeLogPanel();
+
+        // Setup keyboard shortcuts
+        this.setupKeyboardShortcuts();
+
+        console.log('✅ UI initialized');
+    }
+
+    // ==========================================
+    // NF PALETTE SETUP
+    // ==========================================
+
+    /**
+     * Setup NF palette in left sidebar
+     */
+    setupNFPalette() {
+        const palette = document.querySelector('.nf-palette');
+        if (!palette) return;
+
+        const nfTypes = ['NRF', 'AMF', 'SMF', 'UPF', 'AUSF', 'UDM', 'PCF', 'NSSF', 'UDR', 'gNB'];
+
+        nfTypes.forEach(type => {
+            const nfDef = window.nfDefinitions?.[type] || {
+                name: type,
+                color: '#95a5a6'
+            };
+
+            const item = document.createElement('div');
+            item.className = 'nf-palette-item';
+            item.dataset.type = type;
+
+            item.innerHTML = `
+                <div class="nf-icon-small" style="background: ${nfDef.color}">
+                    ${type[0]}
+                </div>
+                <div class="nf-label">
+                    <div class="nf-name">${type}</div>
+                    <div class="nf-desc">${nfDef.name || type}</div>
+                </div>
+            `;
+
+            // Click to add NF
+            item.addEventListener('click', () => {
+                console.log('🖱️ Palette item clicked:', type);
+                this.createNFFromPalette(type);
+            });
+
+            palette.appendChild(item);
+        });
+    }
+
+    /**
+     * Create NF from palette click - NEW WORKFLOW: Show config first
+     * @param {string} type - NF type
+     */
+    createNFFromPalette(type) {
+        console.log('🖱️ Palette item clicked:', type);
+        // NEW: Show configuration panel first, don't create NF yet
+        this.showNFConfigurationForNewNF(type);
+    }
+
+    // ==========================================
+    // ADD NF BUTTON & MODAL
+    // ==========================================
+
+    /**
+     * Setup Add NF button and modal
+     */
+    setupAddNFButton() {
+        const addNFBtn = document.getElementById('btn-add-nf');
+        if (!addNFBtn) {
+            console.error('❌ Add NF button not found');
+            return;
+        }
+
+        addNFBtn.addEventListener('click', () => {
+            console.log('🖱️ Add NF button clicked');
+            this.showAddNFModal();
+        });
+
+        // Setup modal
+        this.setupAddNFModal();
+    }
+
+    /**
+     * Setup Add NF modal
+     */
+    setupAddNFModal() {
+        const modal = document.getElementById('add-nf-modal');
+        const modalCancel = document.getElementById('modal-cancel');
+        const nfGrid = document.getElementById('nf-grid');
+
+        if (!modal || !nfGrid) return;
+
+        // Create NF selection buttons
+        const nfTypes = ['NRF', 'AMF', 'SMF', 'UPF', 'AUSF', 'UDM', 'PCF', 'NSSF', 'UDR', 'gNB', 'ext-dn'];
+
+        nfGrid.innerHTML = '';
+
+        nfTypes.forEach(type => {
+            const nfDef = window.nfDefinitions?.[type] || {
+                name: type,
+                color: '#95a5a6'
+            };
+
+            const btn = document.createElement('button');
+            btn.className = 'nf-select-btn';
+            btn.dataset.type = type;
+
+            btn.innerHTML = `
+                <div class="nf-icon" style="background: ${nfDef.color}">
+                    ${type[0]}
+                </div>
+                <div class="nf-label">${type}</div>
+            `;
+
+            // Click handler - NEW WORKFLOW: Show config first
+            btn.addEventListener('click', () => {
+                console.log('🖱️ Modal: Selected NF type:', type);
+
+                // NEW: Show configuration panel first, don't create NF yet
+                this.showNFConfigurationForNewNF(type);
+
+                // Close modal
+                modal.style.display = 'none';
+            });
+
+            nfGrid.appendChild(btn);
+        });
+
+        // Cancel button
+        if (modalCancel) {
+            modalCancel.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    /**
+     * Show Add NF modal
+     */
+    showAddNFModal() {
+        const modal = document.getElementById('add-nf-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    // ==========================================
+    // CONNECTION BUTTONS (Source/Destination)
+    // ==========================================
+
+    /**
+     * Setup connection control buttons
+     */
+    setupConnectionButtons() {
+        const btnSource = document.getElementById('btn-select-source');
+        const btnDestination = document.getElementById('btn-select-destination');
+        const btnCancel = document.getElementById('btn-cancel-connection');
+
+        if (!btnSource || !btnDestination || !btnCancel) {
+            console.error('❌ Connection buttons not found');
+            return;
+        }
+
+        // Select Source button
+        btnSource.addEventListener('click', () => {
+            console.log('🖱️ Select Source clicked');
+            this.enterSourceSelectionMode();
+        });
+
+        // Select Destination button
+        btnDestination.addEventListener('click', () => {
+            console.log('🖱️ Select Destination clicked');
+            if (this.selectedSourceNF) {
+                // Simplified: Just enter destination mode - user can click NF or Bus
+                this.enterDestinationSelectionMode();
+                console.log('💡 You can now click on an NF or Bus Line to connect!');
+            } else {
+                alert('Please select a source NF first!');
+            }
+        });
+
+        // Cancel button
+        btnCancel.addEventListener('click', () => {
+            console.log('🖱️ Connection cancelled');
+            this.cancelConnectionMode();
+        });
+
+        // Listen to canvas clicks for connection mode
+        this.setupConnectionModeListener();
+    }
+
+    /**
+     * Enter bus selection mode
+     */
+    enterBusSelectionMode() {
+        this.connectionMode = 'selecting-bus';
+
+        const btnDestination = document.getElementById('btn-select-destination');
+        btnDestination.classList.add('active');
+        btnDestination.style.background = '#27ae60';
+
+        this.showCanvasMessage(`Select a SERVICE BUS to connect ${this.selectedSourceNF.name}`);
+    }
+
+    /**
+     * Select bus and create connection
+         */
+    selectBus(bus) {
+        console.log('✅ Bus selected as destination:', bus.name);
+
+        if (this.selectedSourceNF) {
+            // NF to Bus connection
+            console.log('🔗 Creating NF-to-Bus connection:', this.selectedSourceNF.name, '→', bus.name);
+            if (window.busManager) {
+                const connection = window.busManager.connectNFToBus(this.selectedSourceNF.id, bus.id);
+                if (connection) {
+                    console.log('✅ NF-to-Bus connection created successfully!');
+                }
+            }
+        } else if (this.selectedSourceBus) {
+            // Bus to Bus connection
+            console.log('🔗 Creating Bus-to-Bus connection:', this.selectedSourceBus.name, '→', bus.name);
+            if (window.busManager) {
+                const connection = window.busManager.connectBusToBus(this.selectedSourceBus.id, bus.id);
+                if (connection) {
+                    console.log('✅ Bus-to-Bus connection created successfully!');
+                }
+            }
+        } else {
+            console.error('❌ No source selected!');
+            alert('Error: No source selected');
+        }
+
+        this.cancelConnectionMode();
+    }
+
+    /**
+     * Setup listener for connection mode canvas clicks
+     */
+    setupConnectionModeListener() {
+        if (window.dataStore) {
+            window.dataStore.subscribe((event, data) => {
+                if (event === 'nf-added') {
+                    this.updateLogNFFilter();
+                }
+            });
+        }
+
+        const canvas = document.getElementById('main-canvas');
+        if (canvas) {
+            canvas.addEventListener('click', (e) => {
+                if (this.connectionMode === 'idle') return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const clickedNF = window.canvasRenderer?.getNFAtPosition(x, y);
+                const clickedBus = this.getBusAtPosition(x, y);
+
+                console.log('🖱️ Canvas click in connection mode:', this.connectionMode);
+                console.log('🖱️ Clicked NF:', clickedNF?.name || 'none');
+                console.log('🖱️ Clicked Bus:', clickedBus?.name || 'none');
+
+                if (this.connectionMode === 'selecting-source') {
+                    // In source mode, allow clicking either NF or Bus
+                    if (clickedNF) {
+                        console.log('🔗 Selecting NF as source...');
+                        this.selectSourceNF(clickedNF);
+                    } else if (clickedBus) {
+                        console.log('🚌 Selecting Bus as source...');
+                        this.selectSourceBus(clickedBus);
+                    } else {
+                        console.log('❌ Please click on an NF or Bus Line');
+                    }
+                } else if (this.connectionMode === 'selecting-destination') {
+                    // In destination mode, allow clicking either NF or Bus
+                    if (clickedNF) {
+                        console.log('🔗 Connecting to NF...');
+                        this.selectDestinationNF(clickedNF);
+                    } else if (clickedBus) {
+                        console.log(' Connecting to Bus...');
+                        this.selectBus(clickedBus);
+                    } else {
+                        console.log('❌ Please click on an NF or Bus Line');
+                    }
+                } else if (this.connectionMode === 'selecting-bus' && clickedBus) {
+                    // Keep this for backward compatibility
+                    console.log(' Bus click detected, calling selectBus...');
+                    this.selectBus(clickedBus);
+                }
+            });
+        }
+    }
+    /**
+     * Enter source selection mode
+     */
+    enterSourceSelectionMode() {
+        this.connectionMode = 'selecting-source';
+        this.selectedSourceNF = null;
+        this.selectedSourceBus = null; // NEW: Clear bus source
+        this.selectedDestinationNF = null;
+
+        // Update UI
+        const btnSource = document.getElementById('btn-select-source');
+        const btnDestination = document.getElementById('btn-select-destination');
+        const btnCancel = document.getElementById('btn-cancel-connection');
+
+        btnSource.classList.add('active');
+        btnSource.style.background = '#3498db';
+        btnDestination.disabled = true;
+        btnCancel.style.display = 'block';
+
+        // Show canvas message
+        // this.showCanvasMessage('Click an NF or BUS LINE to set as SOURCE');
+    }
+
+    /**
+     * Enter destination selection mode
+     */
+    enterDestinationSelectionMode() {
+        this.connectionMode = 'selecting-destination';
+
+        // Update UI
+        const btnSource = document.getElementById('btn-select-source');
+        const btnDestination = document.getElementById('btn-select-destination');
+
+        btnSource.classList.remove('active');
+        btnSource.style.background = '';
+        btnDestination.classList.add('active');
+        btnDestination.style.background = '#4caf50';
+
+        // // Show canvas message
+        // const sourceName = this.selectedSourceNF?.name || this.selectedSourceBus?.name || 'source';
+        // this.showCanvasMessage(`Click on an NF or BUS LINE to connect from ${sourceName}`);
+    }
+
+    /**
+     * Select source NF
+     * @param {Object} nf - Selected NF
+     */
+    selectSourceNF(nf) {
+        console.log('✅ Source selected:', nf.name);
+        this.selectedSourceNF = nf;
+
+        // Enable destination button
+        const btnDestination = document.getElementById('btn-select-destination');
+        btnDestination.disabled = false;
+
+        // Auto-switch to destination mode
+        this.enterDestinationSelectionMode();
+    }
+
+    /**
+     * Select source Bus
+     * @param {Object} bus - Selected Bus
+     */
+    selectSourceBus(bus) {
+        console.log('✅ Bus source selected:', bus.name);
+        this.selectedSourceBus = bus;
+        this.selectedSourceNF = null; // Clear NF selection
+
+        // Enable destination button
+        const btnDestination = document.getElementById('btn-select-destination');
+        btnDestination.disabled = false;
+
+        // Auto-switch to destination mode
+        this.enterDestinationSelectionMode();
+    }
+
+    /**
+     * Select destination NF and create connection
+     * @param {Object} nf - Selected NF
+     */
+    selectDestinationNF(nf) {
+        console.log('✅ NF selected as destination:', nf.name);
+        this.selectedDestinationNF = nf;
+
+        if (this.selectedSourceNF) {
+            // NF to NF connection (standard)
+            console.log('🔗 Creating NF-to-NF connection:', this.selectedSourceNF.name, '→', nf.name);
+            if (window.connectionManager) {
+                // Create manual connection (with visual line)
+                const connection = window.connectionManager.createManualConnection(
+                    this.selectedSourceNF.id,
+                    this.selectedDestinationNF.id
+                );
+
+                if (connection) {
+                    console.log('✅ NF-to-NF connection created successfully');
+                }
+            }
+        } else if (this.selectedSourceBus) {
+            // Bus to NF connection
+            console.log('🔗 Creating Bus-to-NF connection:', this.selectedSourceBus.name, '→', nf.name);
+            if (window.busManager) {
+                const connection = window.busManager.connectBusToNF(this.selectedSourceBus.id, nf.id);
+                if (connection) {
+                    console.log('✅ Bus-to-NF connection created successfully');
+                }
+            }
+        } else {
+            console.error('❌ No source selected!');
+            alert('Error: No source selected');
+        }
+
+        // Reset connection mode
+        this.cancelConnectionMode();
+    }
+
+    /**
+     * Cancel connection mode
+     */
+    cancelConnectionMode() {
+        this.connectionMode = 'idle';
+        this.selectedSourceNF = null;
+        this.selectedSourceBus = null; // NEW: Clear bus source
+        this.selectedDestinationNF = null;
+
+        // Update UI
+        const btnSource = document.getElementById('btn-select-source');
+        const btnDestination = document.getElementById('btn-select-destination');
+        const btnCancel = document.getElementById('btn-cancel-connection');
+
+        btnSource.classList.remove('active');
+        btnSource.style.background = '';
+        btnDestination.classList.remove('active');
+        btnDestination.style.background = '';
+        btnDestination.disabled = true;
+        btnCancel.style.display = 'none';
+
+        // Hide canvas message
+        this.hideCanvasMessage();
+    }
+
+    /**
+     * Show canvas message
+     * @param {string} message - Message to display
+     */
+    showCanvasMessage(message) {
+        const msgElement = document.getElementById('canvas-message');
+        if (msgElement) {
+            msgElement.textContent = message;
+            msgElement.classList.add('show');
+        }
+    }
+
+    /**
+     * Hide canvas message
+     */
+    hideCanvasMessage() {
+        const msgElement = document.getElementById('canvas-message');
+        if (msgElement) {
+            msgElement.classList.remove('show');
+        }
+    }
+
+    // ==========================================
+    // SAVE / LOAD / CLEAR BUTTONS
+    // ==========================================
+
+
+
+    /**
+     * Setup Clear button
+     */
+    setupClearButton() {
+        const clearBtn = document.getElementById('btn-clear');
+        if (!clearBtn) return;
+
+        clearBtn.addEventListener('click', () => {
+            console.log('🗑️ Clear clicked');
+            this.clearTopology();
+        });
+    }
+
+    /**
+     * Clear entire topology
+     */
+    clearTopology() {
+        if (!confirm('Are you sure you want to clear the entire topology? This cannot be undone.')) {
+            return;
+        }
+
+        // Clear data
+        if (window.dataStore) {
+            window.dataStore.clearAll();
+        }
+
+        // Clear logs
+        if (window.logEngine) {
+            window.logEngine.clearAllLogs();
+        }
+
+        // Clear log UI
+        const logContent = document.getElementById('log-content');
+        if (logContent) {
+            logContent.innerHTML = '';
+        }
+
+        // Re-render canvas
+        if (window.canvasRenderer) {
+            window.canvasRenderer.render();
+        }
+
+        console.log('✅ Topology cleared');
+        alert('Topology cleared successfully!');
+        // Full refresh ensures complete re-initialization of all managers and UI state
+        window.location.reload();
+    }
+
+    /**
+     * Setup One-Click Deploy button
+     */
+    setupOneClickDeployButton() {
+        const deployBtn = document.getElementById('btn-one-click-deploy');
+        if (!deployBtn) {
+            console.error('❌ One-Click Deploy button not found');
+            return;
+        }
+
+        deployBtn.addEventListener('click', async () => {
+            console.log('🚀 One-Click Deploy clicked');
+            await this.deployOneClickTopology();
+        });
+    }
+
+    /**
+     * Deploy entire core network topology from one-click.json.
+     * NFs appear on canvas one-by-one over 10–13 seconds. No overlay modal.
+     * Logs are generated from log-scenarios.json for each NF as it deploys.
+     */
+    async deployOneClickTopology() {
+        const confirmed = confirm(
+            '🚀 ONE-CLICK DEPLOYMENT\n\n' +
+            'This will deploy the complete 5G core network\n' +
+            'topology (~10–13 seconds).\n\n' +
+            'Current topology will be cleared.\n\n' +
+            'Continue?'
+        );
+        if (!confirmed) return;
+
+        // Disable the button during deployment
+        const deployBtn = document.getElementById('btn-one-click-deploy');
+        if (deployBtn) {
+            deployBtn.disabled = true;
+            deployBtn.textContent = '⏳ Deploying…';
+        }
+
+        try {
+            // Load topology JSON
+            const response = await fetch('../one-click.json');
+            if (!response.ok) throw new Error(`Cannot load one-click.json (HTTP ${response.status})`);
+            const data = await response.json();
+
+            // Clear existing topology and logs
+            if (window.dataStore) window.dataStore.clearAll();
+            if (window.logEngine) {
+                const lc = document.getElementById('log-content');
+                if (lc) lc.innerHTML = '';
+                window.logEngine.clearAllLogs();
+            }
+            if (window.canvasRenderer) window.canvasRenderer.render();
+            await this._delay(300);
+
+            // Deploy service bus first (silent, no log)
+            (data.buses || []).forEach(b => window.dataStore?.addBus(b));
+            if (window.canvasRenderer) window.canvasRenderer.render();
+            await this._delay(300);
+
+            // Reset NF counters
+            if (window.nfManager) {
+                Object.keys(window.nfManager.nfCounters).forEach(t => window.nfManager.nfCounters[t] = 0);
+            }
+
+            // Pre-load all NF data into dataStore silently first so dependency
+            // checks inside log-scenarios work correctly (NFs exist when logs fire)
+            // UE is excluded from one-click deployment
+            const nfs = (data.nfs || []).filter(nf => nf.type !== 'UE');
+            const nfObjects = nfs.map(nfData => ({ ...nfData, iconImage: null }));
+
+            // Spread NF deployment across 8500 ms total
+            const perNFDelay = nfObjects.length > 0 ? Math.floor(8500 / nfObjects.length) : 650;
+
+            // Also pre-load connections/busConnections into dataStore so
+            // hasConnectionToType() returns true when scenario logs fire
+            // Skip any connections that involve a UE
+            const ueIds = new Set((data.nfs || []).filter(n => n.type === 'UE').map(n => n.id));
+            (data.busConnections || [])
+                .filter(c => !ueIds.has(c.nfId))
+                .forEach(c => window.dataStore?.addBusConnection(c));
+            (data.connections || [])
+                .filter(c => !ueIds.has(c.sourceId) && !ueIds.has(c.targetId))
+                .forEach(c => window.dataStore?.addConnection(c));
+
+            // Now deploy each NF one-by-one with scenario-driven logs
+            for (let i = 0; i < nfObjects.length; i++) {
+                const nf = nfObjects[i];
+
+                // Load icon async (non-blocking)
+                if (nf.icon) {
+                    const img = new Image();
+                    img.onload = () => {
+                        nf.iconImage = img;
+                        if (window.canvasRenderer) window.canvasRenderer.render();
+                    };
+                    img.src = nf.icon;
+                }
+
+                // Add to data store so it appears on canvas
+                if (window.dataStore) {
+                    window.dataStore.addNF(nf);
+                    if (window.nfManager) {
+                        const num = parseInt(nf.name.split('-').pop());
+                        if (!isNaN(num) && num > (window.nfManager.nfCounters[nf.type] || 0)) {
+                            window.nfManager.nfCounters[nf.type] = num;
+                        }
+                    }
+                }
+
+                if (window.canvasRenderer) window.canvasRenderer.render();
+
+                // Fire scenario-based logs for this NF (same system used during manual deploy)
+                if (window.logEngine) {
+                    window.logEngine.onNFAdded(nf);
+                }
+
+                await this._delay(perNFDelay);
+            }
+
+            // Final render with all connections visible
+            if (window.canvasRenderer) window.canvasRenderer.render();
+
+            if (window.logEngine) {
+                window.logEngine.addLog('system', 'SUCCESS',
+                    '5G Core Network fully deployed via One-Click Deploy', {
+                    nfsDeployed: nfObjects.length,
+                    connectionsDeployed: (data.connections || []).length,
+                    busesDeployed: (data.buses || []).length,
+                    busConnectionsDeployed: (data.busConnections || []).length,
+                    deployedAt: new Date().toISOString()
+                });
+            }
+
+            alert(
+                '✅ DEPLOYMENT SUCCESSFUL!\n\n' +
+                `Network Functions : ${nfObjects.length}\n` +
+                `Connections       : ${(data.connections || []).length}\n` +
+                `Service Buses     : ${(data.buses || []).length}\n` +
+                `Bus Connections   : ${(data.busConnections || []).length}\n\n` +
+                'Your 5G core network is ready!'
+            );
+
+        } catch (error) {
+            console.error('❌ Deployment failed:', error);
+            alert('❌ Deployment Failed!\n\n' + error.message);
+            if (window.logEngine) {
+                window.logEngine.addLog('system', 'ERROR', 'One-Click Deploy failed', { error: error.message });
+            }
+        } finally {
+            if (deployBtn) {
+                deployBtn.disabled = false;
+                deployBtn.textContent = '🚀 One-Click Deploy';
+            }
+        }
+    }
+
+    /**
+     * Small async delay helper
+     * @param {number} ms
+     */
+    _delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Setup Validate button
+     */
+    setupValidateButton() {
+        const validateBtn = document.getElementById('btn-validate');
+        if (!validateBtn) return;
+
+        validateBtn.addEventListener('click', () => {
+            console.log('✓ Validate clicked');
+            this.validateTopology();
+        });
+    }
+
+    /**
+     * Setup Terminal button
+     */
+    setupTerminalButton() {
+        const terminalBtn = document.getElementById('btn-terminal');
+        if (!terminalBtn) {
+            console.error('❌ Terminal button not found');
+            return;
+        }
+
+        terminalBtn.addEventListener('click', () => {
+            console.log('💻 Terminal button clicked');
+            if (window.dockerTerminal) {
+                window.dockerTerminal.openTerminal();
+            } else {
+                console.error('❌ DockerTerminal not available');
+                alert('Terminal is not available. Please refresh the page.');
+            }
+        });
+    }
+
+    /**
+     * Validate topology
+     */
+    validateTopology() {
+        const allNFs = window.dataStore?.getAllNFs() || [];
+        const allConnections = window.dataStore?.getAllConnections() || [];
+
+        if (allNFs.length === 0) {
+            alert('Topology is empty. Add some Network Functions first.');
+            return;
+        }
+
+        let report = '═══════════════════════════════════\n';
+        report += '5G TOPOLOGY VALIDATION REPORT\n';
+        report += '═══════════════════════════════════\n\n';
+
+        // Check for NRF
+        const hasNRF = allNFs.some(nf => nf.type === 'NRF');
+        if (!hasNRF) {
+            report += '❌ CRITICAL: NRF is missing!\n';
+            report += '   NRF is required as the central registry.\n\n';
+        } else {
+            report += '✅ NRF exists\n\n';
+        }
+
+        // Check each NF
+        report += 'NETWORK FUNCTIONS:\n';
+        report += '─────────────────────────────────\n';
+        allNFs.forEach(nf => {
+            const connections = window.dataStore.getConnectionsForNF(nf.id);
+            report += `${nf.name} (${nf.type}): ${connections.length} connections\n`;
+        });
+
+        report += '\n';
+        report += `Total NFs: ${allNFs.length}\n`;
+        report += `Total Connections: ${allConnections.length}\n`;
+
+        report += '\n═══════════════════════════════════\n';
+        report += hasNRF ? 'STATUS: ✅ VALID' : 'STATUS: ❌ INVALID';
+        report += '\n═══════════════════════════════════';
+
+        alert(report);
+        console.log(report);
+    }
+
+    /**
+     * Setup Help button
+     */
+    setupHelpButton() {
+        const helpBtn = document.getElementById('btn-help');
+        if (!helpBtn) return;
+
+        helpBtn.addEventListener('click', () => {
+            console.log('❓ Help clicked');
+            this.showHelpModal();
+        });
+    }
+
+    /**
+     * Show Help modal
+     */
+    showHelpModal() {
+        const modal = document.getElementById('help-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+
+        // Setup close button
+        const closeBtn = document.getElementById('help-close');
+        if (closeBtn) {
+            closeBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+
+        // Close on background click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
+
+    // ==========================================
+    // CONFIGURATION PANEL
+    // ==========================================
+
+    /**
+     * Show NF configuration panel for NEW NF (before creation)
+     * @param {string} nfType - NF type to configure
+     */
+    showNFConfigurationForNewNF(nfType) {
+        const configForm = document.getElementById('config-form');
+        if (!configForm) return;
+
+        // Get NF definition for defaults
+        const nfDef = window.nfManager?.getNFDefinition(nfType) || { name: nfType, color: '#95a5a6' };
+
+        // Generate unique default values automatically
+        const count = (window.nfManager?.nfCounters[nfType] || 0) + 1;
+        const defaultName = `${nfType}-${count}`;
+        
+        // Get next available unique IP and port
+        const defaultIP = this.getNextAvailableIP();
+        const defaultPort = this.getNextAvailablePort();
+        const globalProtocol = window.globalHTTPProtocol || 'HTTP/2';
+
+        configForm.innerHTML = `
+            <h4>Configure New ${nfType}</h4>
+            
+            <div class="form-group">
+                <label>IP Address *</label>
+                <input type="text" id="config-ip" value="${defaultIP}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Port *</label>
+                <input type="number" id="config-port" value="${defaultPort}" required>
+            </div>
+            
+            <div class="form-group">
+                <label>🌐 HTTP Protocol (Global Setting)</label>
+                <select id="config-http-protocol">
+                    <option value="HTTP/1" ${globalProtocol === 'HTTP/1' ? 'selected' : ''}>HTTP/1.1</option>
+                    <option value="HTTP/2" ${globalProtocol === 'HTTP/2' ? 'selected' : ''}>HTTP/2</option>
+                </select>
+                <small style="color: #95a5a6; font-size: 11px; display: block; margin-top: 4px;">
+                    ⚠️ Changing this will update ALL Network Functions in topology
+                </small>
+            </div>
+            
+            <button class="btn btn-success btn-block" id="btn-start-nf" data-nf-type="${nfType}">
+                🚀 Start Network Function
+            </button>
+            <button class="btn btn-secondary btn-block" id="btn-cancel-nf">Cancel</button>
+        `;
+
+        // Protocol change event listener
+        const protocolSelect = document.getElementById('config-http-protocol');
+        if (protocolSelect) {
+            protocolSelect.addEventListener('change', (e) => {
+                const newProtocol = e.target.value;
+                const currentProtocol = window.globalHTTPProtocol || 'HTTP/2';
+
+                if (newProtocol !== currentProtocol) {
+                    const allNFs = window.dataStore?.getAllNFs() || [];
+                    const confirmMsg = `⚠️ GLOBAL PROTOCOL CHANGE\n\n` +
+                        `This will change HTTP protocol for ALL ${allNFs.length} Network Functions from ${currentProtocol} to ${newProtocol}.\n\n` +
+                        `All NFs will use ${newProtocol} for Service-Based Interfaces.\n\n` +
+                        `Do you want to continue?`;
+
+                    if (confirm(confirmMsg)) {
+                        if (window.nfManager) {
+                            const updateCount = window.nfManager.updateGlobalProtocol(newProtocol);
+                            alert(`✅ Success!\n\nUpdated ${updateCount} Network Functions to ${newProtocol}`);
+                        }
+                    } else {
+                        protocolSelect.value = currentProtocol;
+                    }
+                }
+            });
+        }
+
+        // Start button handler
+        const startBtn = document.getElementById('btn-start-nf');
+        startBtn.addEventListener('click', () => {
+            this.startNewNetworkFunction(nfType);
+        });
+
+        // Input restrictions for IP address
+        const ipInput = document.getElementById('config-ip');
+        if (ipInput) {
+            ipInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            });
+        }
+
+        // Input restrictions for port
+        const portInput = document.getElementById('config-port');
+        if (portInput) {
+            portInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Cancel button handler
+        const cancelBtn = document.getElementById('btn-cancel-nf');
+        cancelBtn.addEventListener('click', () => {
+            this.hideNFConfigPanel();
+        });
+    }
+
+    /**
+     * Show NF configuration panel
+     * @param {Object} nf - Network Function to configure
+     */
+    showNFConfigPanel(nf) {
+        const configForm = document.getElementById('config-form');
+        if (!configForm) return;
+
+        configForm.innerHTML = `
+            <h4>${nf.name} Configuration</h4>
+            
+            <div class="form-group">
+                <label>NF Type</label>
+                <input type="text" value="${nf.type}" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>IP Address</label>
+                <input type="text" id="config-ip" value="${nf.config.ipAddress}">
+            </div>
+            
+            <div class="form-group">
+                <label>Port</label>
+                <input type="number" id="config-port" value="${nf.config.port}">
+            </div>
+            
+            
+            <div class="form-group">
+                <label>🌐 HTTP Protocol (Global Setting)</label>
+                <select id="config-http-protocol">
+                    <option value="HTTP/1" ${nf.config.httpProtocol === 'HTTP/1' ? 'selected' : ''}>HTTP/1.1</option>
+                    <option value="HTTP/2" ${nf.config.httpProtocol === 'HTTP/2' ? 'selected' : ''}>HTTP/2</option>
+                </select>
+                <small style="color: #95a5a6; font-size: 11px; display: block; margin-top: 4px;">
+                    ⚠️ Changing this will update ALL Network Functions in topology
+                </small>
+            </div>
+            
+            
+            <button class="btn btn-primary btn-block" id="btn-save-config">Save Changes</button>
+            <button class="btn btn-danger btn-block" id="btn-delete-nf">Delete NF</button>
+            
+            ${nf.type === 'gNB' ? `
+            <div class="form-group">
+                <h4>Student Triggers</h4>
+                <button class="btn btn-info btn-block" id="btn-trigger-ngap">Trigger NGAP Flow</button>
+                <button class="btn btn-info btn-block" id="btn-trigger-gtpu">Trigger GTP-U Packet</button>
+            </div>
+            ` : ''}
+            
+            
+            <button class="btn btn-terminal btn-block" id="btn-open-terminal">
+                💻 Open Command Prompt
+            </button>
+            
+        `;
+
+        // Protocol change event listener
+        const protocolSelect = document.getElementById('config-http-protocol');
+        if (protocolSelect) {
+            protocolSelect.addEventListener('change', (e) => {
+                const newProtocol = e.target.value;
+
+                // Show confirmation dialog
+                const currentProtocol = window.globalHTTPProtocol || 'HTTP/2';
+                if (newProtocol !== currentProtocol) {
+                    const allNFs = window.dataStore?.getAllNFs() || [];
+                    const confirmMsg = `⚠️ GLOBAL PROTOCOL CHANGE\n\n` +
+                        `This will change HTTP protocol for ALL ${allNFs.length} Network Functions from ${currentProtocol} to ${newProtocol}.\n\n` +
+                        `All NFs will use ${newProtocol} for Service-Based Interfaces.\n\n` +
+                        `Do you want to continue?`;
+
+                    if (confirm(confirmMsg)) {
+                        // Update global protocol
+                        if (window.nfManager) {
+                            const updateCount = window.nfManager.updateGlobalProtocol(newProtocol);
+                            alert(`✅ Success!\n\nUpdated ${updateCount} Network Functions to ${newProtocol}`);
+
+                            // Refresh config panel to show updated value
+                            this.showNFConfigPanel(nf);
+                        }
+                    } else {
+                        // Revert selection
+                        protocolSelect.value = currentProtocol;
+                    }
+                }
+            });
+        }
+
+        // Save button handler
+        const saveBtn = document.getElementById('btn-save-config');
+        saveBtn.addEventListener('click', () => {
+            this.saveNFConfig(nf.id);
+        });
+
+        // Delete button handler
+        const deleteBtn = document.getElementById('btn-delete-nf');
+        deleteBtn.addEventListener('click', () => {
+            this.deleteNF(nf.id);
+        });
+
+        // Student trigger button handlers (only available for gNB)
+        if (nf.type === 'gNB') {
+            const btnNgap = document.getElementById('btn-trigger-ngap');
+            const btnGtpu = document.getElementById('btn-trigger-gtpu');
+
+            if (btnNgap) {
+                btnNgap.onclick = () => {
+                    const amf = window.dataStore.getAllNFs().find(x => x.type === 'AMF');
+                    if (!amf) return alert('Please add and connect an AMF to see NGAP flows.');
+                    // Use logEngine (exists globally)
+                    if (window.logEngine && typeof window.logEngine.simulateNGAP === 'function') {
+                        window.logEngine.simulateNGAP(nf, amf);
+                    } else {
+                        alert('NGAP simulator not available.');
+                    }
+                };
+            }
+
+            if (btnGtpu) {
+                btnGtpu.onclick = () => {
+                    const upf = window.dataStore.getAllNFs().find(x => x.type === 'UPF');
+                    if (!upf) return alert('Please add and connect a UPF to see GTP-U flows.');
+                    if (window.logEngine && typeof window.logEngine.simulateGTPU === 'function') {
+                        window.logEngine.simulateGTPU(nf, upf);
+                    } else {
+                        alert('GTP-U simulator not available.');
+                    }
+                };
+            }
+        }
+
+        // Input restrictions for IP address
+        const ipInput = document.getElementById('config-ip');
+        if (ipInput) {
+            ipInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            });
+        }
+
+        // Input restrictions for port
+        const portInput = document.getElementById('config-port');
+        if (portInput) {
+            portInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Ping troubleshooting handlers
+        this.setupPingTroubleshootingHandlers(nf.id);
+    }
+
+    /**
+     * Start new Network Function with IP conflict prevention
+     * @param {string} nfType - NF type
+     */
+    startNewNetworkFunction(nfType) {
+        const ipAddress = document.getElementById('config-ip')?.value;
+        const portInput = document.getElementById('config-port')?.value;
+        const port = parseInt(portInput);
+        const httpProtocol = document.getElementById('config-http-protocol')?.value;
+
+        if (!ipAddress || !portInput) {
+            alert('❌ Please fill all required fields!');
+            return;
+        }
+
+        // Auto-generate name based on NF type and counter
+        const count = (window.nfManager?.nfCounters[nfType] || 0) + 1;
+        const name = `${nfType}-${count}`;
+
+        // Validate IP address
+        if (!this.isValidIP(ipAddress)) {
+            alert('❌ Invalid IP address!\n\nRequirements:\n- Must be in format 1.0.0.0 to 255.255.255.255\n- Cannot be 0.0.0.0\n- Only numbers and dots allowed\n\nExample: 192.168.1.20');
+            return;
+        }
+
+        // Validate port
+        if (!this.isValidPort(portInput)) {
+            alert('❌ Invalid port number!\n\nRequirements:\n- Must be 4-6 digits only\n- No special characters or letters allowed\n\nExample: 8080');
+            return;
+        }
+
+        // Check for IP conflicts
+        if (!window.nfManager?.isIPAddressAvailable(ipAddress)) {
+            alert(`❌ IP Conflict Detected!\n\nIP address ${ipAddress} is already in use by another service.\n\nPlease choose a different IP address.`);
+            return;
+        }
+
+        // Check for port conflicts
+        if (!window.nfManager?.isPortAvailable(port)) {
+            alert(`❌ Port Conflict Detected!\n\nPort ${port} is already in use by another service.\n\nPlease choose a different port number.`);
+            return;
+        }
+
+        console.log('🚀 Starting new NF:', { nfType, name, ipAddress, port, httpProtocol });
+
+        // Calculate position with proper spacing
+        const position = this.calculateNFPositionWithSpacing(nfType);
+
+        // Create NF with automatic unique IP/port (will be overridden)
+        if (window.nfManager) {
+            const nf = window.nfManager.createNetworkFunction(nfType, position);
+
+            if (nf) {
+                // Override with user-specified configuration
+                nf.name = name;
+                nf.config.ipAddress = ipAddress;
+                nf.config.port = port;
+                nf.config.httpProtocol = httpProtocol;
+
+                // Update in data store
+                window.dataStore.updateNF(nf.id, nf);
+
+                console.log('✅ NF started successfully:', nf.name);
+
+                // Log service creation with network info
+                if (window.logEngine) {
+                    window.logEngine.addLog(nf.id, 'SUCCESS',
+                        `${nf.name} created successfully`, {
+                        ipAddress: ipAddress,
+                        port: port,
+                        subnet: window.nfManager?.getNetworkFromIP(ipAddress) + '.0/24',
+                        protocol: httpProtocol,
+                        status: 'starting',
+                        note: 'Service will be stable in 5 seconds'
+                    });
+                }
+
+                // Auto-connect to bus if applicable
+                this.autoConnectToBusIfApplicable(nf);
+
+                // Clear configuration panel
+                this.hideNFConfigPanel();
+
+                // Re-render canvas
+                if (window.canvasRenderer) {
+                    window.canvasRenderer.render();
+                }
+            } else {
+                // NF creation failed (e.g., UE limit reached or duplicate type)
+                console.warn('⚠️ NF creation failed for type:', nfType);
+                const existingOfType = window.dataStore?.getAllNFs().find(n => n.type === nfType);
+                if (existingOfType) {
+                    alert(`❌ ${nfType} is already deployed (${existingOfType.name}).\n\nEach Network Function type can only be deployed once.\n\nTo redeploy, delete the existing ${existingOfType.name} first.`);
+                }
+                // Don't clear the config panel so user can try a different NF type
+                return;
+            }
+        } else {
+            console.error('❌ NFManager not available');
+            alert('Error: NFManager not available');
+        }
+    }
+
+    /**
+     * Calculate NF position with proper spacing
+     * @param {string} nfType - NF type
+     * @returns {Object} {x, y} position
+     */
+    calculateNFPositionWithSpacing(nfType) {
+        const allNFs = window.dataStore?.getAllNFs() || [];
+
+        // Grid layout with better spacing
+        const nfsPerRow = 6;  // More NFs per row
+        const nfWidth = 60;   // Smaller width for better fit
+        const nfHeight = 80;  // Height including label
+        const marginX = 40;   // Horizontal spacing
+        const marginY = 60;   // Vertical spacing
+        const startX = 120;   // Start position X
+        const startY = 120;   // Start position Y
+
+        const totalNFs = allNFs.length;
+        const row = Math.floor(totalNFs / nfsPerRow);
+        const col = totalNFs % nfsPerRow;
+
+        return {
+            x: startX + col * (nfWidth + marginX),
+            y: startY + row * (nfHeight + marginY)
+        };
+    }
+
+    /**
+     * Auto-connect NF to bus line if applicable
+     * @param {Object} nf - Network Function
+     */
+    autoConnectToBusIfApplicable(nf) {
+        // Don't auto-connect UPF, gNB, and UE as per requirement
+        const excludedTypes = ['UPF', 'gNB', 'UE'];
+
+        if (excludedTypes.includes(nf.type)) {
+            console.log(`🚫 Skipping auto-connect for ${nf.type} (excluded type)`);
+            return;
+        }
+
+        // Find available bus lines
+        const allBuses = window.dataStore?.getAllBuses() || [];
+
+        if (allBuses.length === 0) {
+            console.log('ℹ️ No bus lines available for auto-connect');
+            return;
+        }
+
+        // Connect to the first available bus (or you can add logic to choose the best bus)
+        const targetBus = allBuses[0];
+
+        if (window.busManager) {
+            console.log(`🔗 Auto-connecting ${nf.name} to ${targetBus.name}`);
+            const connection = window.busManager.connectNFToBus(nf.id, targetBus.id);
+
+            if (connection) {
+                
+                // Add log for auto-connection
+                if (window.logEngine) {
+                    window.logEngine.addLog(nf.id, 'INFO',
+                        `Auto-connected to ${targetBus.name} service bus`, {
+                        busId: targetBus.id,
+                        interfaceName: connection.interfaceName,
+                        autoConnect: true
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * Hide NF configuration panel
+     */
+    hideNFConfigPanel() {
+        const configForm = document.getElementById('config-form');
+        if (configForm) {
+            configForm.innerHTML = '<p class="hint">Select a Network Function type to configure and start it</p>';
+        }
+    }
+
+    /**
+     * Save NF configuration with IP conflict prevention
+     * @param {string} nfId - NF ID
+     */
+    saveNFConfig(nfId) {
+        const ipAddress = document.getElementById('config-ip')?.value;
+        const portInput = document.getElementById('config-port')?.value;
+        const port = parseInt(portInput);
+        const httpProtocol = document.getElementById('config-http-protocol')?.value;
+
+        if (!ipAddress || !portInput) {
+            alert('❌ Please fill all required fields!');
+            return;
+        }
+
+        // Get current NF to keep its name
+        const nf = window.dataStore.getNFById(nfId);
+        if (!nf) return;
+        const name = nf.name; // Keep existing name
+
+        // Validate IP address
+        if (!this.isValidIP(ipAddress)) {
+            alert('❌ Invalid IP address!\n\nRequirements:\n- Must be in format 1.0.0.0 to 255.255.255.255\n- Cannot be 0.0.0.0\n- Only numbers and dots allowed\n\nExample: 192.168.1.20');
+            return;
+        }
+
+        // Validate port
+        if (!this.isValidPort(portInput)) {
+            alert('❌ Invalid port number!\n\nRequirements:\n- Must be 4-6 digits only\n- No special characters or letters allowed\n\nExample: 8080');
+            return;
+        }
+
+        // Check for IP conflicts (excluding current NF)
+        const currentNf = window.dataStore.getNFById(nfId);
+        if (currentNf && currentNf.config.ipAddress !== ipAddress) {
+            if (!window.nfManager?.isIPAddressAvailable(ipAddress)) {
+                alert(`❌ IP Conflict Detected!\n\nIP address ${ipAddress} is already in use by another service.\n\nPlease choose a different IP address.`);
+                return;
+            }
+        }
+
+        // Check for port conflicts (excluding current NF)
+        if (currentNf && currentNf.config.port !== port) {
+            if (!window.nfManager?.isPortAvailable(port)) {
+                alert(`❌ Port Conflict Detected!\n\nPort ${port} is already in use by another service.\n\nPlease choose a different port number.`);
+                return;
+            }
+        }
+
+        // Update NF (name already retrieved above)
+        if (nf) {
+            const oldIP = nf.config.ipAddress;
+            const oldPort = nf.config.port;
+
+            // Keep existing name, don't update it
+            nf.config.ipAddress = ipAddress;
+            nf.config.port = port;
+            nf.config.httpProtocol = httpProtocol;
+
+            window.dataStore.updateNF(nfId, nf);
+
+            // Log configuration change
+            if (window.logEngine) {
+                const changes = [];
+                if (oldIP !== ipAddress) changes.push(`IP: ${oldIP} → ${ipAddress}`);
+                if (oldPort !== port) changes.push(`Port: ${oldPort} → ${port}`);
+                
+                if (changes.length > 0) {
+                    window.logEngine.addLog(nfId, 'INFO',
+                        `Configuration updated: ${changes.join(', ')}`, {
+                        previousIP: oldIP,
+                        newIP: ipAddress,
+                        previousPort: oldPort,
+                        newPort: port,
+                        subnet: window.nfManager?.getNetworkFromIP(ipAddress) + '.0/24'
+                    });
+                }
+            }
+
+            // Re-render
+            if (window.canvasRenderer) {
+                window.canvasRenderer.render();
+            }
+
+            alert('✅ Configuration saved successfully!\n\n' + 
+                  `IP: ${ipAddress}\n` +
+                  `Port: ${port}\n` +
+                  `Subnet: ${window.nfManager?.getNetworkFromIP(ipAddress)}.0/24`);
+            console.log('✅ NF config saved:', nf.name);
+        }
+    }
+
+    /**
+     * Delete NF
+     * @param {string} nfId - NF ID
+     */
+    deleteNF(nfId) {
+        const nf = window.dataStore.getNFById(nfId);
+        if (!nf) return;
+
+        if (!confirm(`Are you sure you want to delete ${nf.name}?`)) {
+            return;
+        }
+
+        if (window.nfManager) {
+            window.nfManager.deleteNetworkFunction(nfId);
+        }
+
+        this.hideNFConfigPanel();
+    }
+
+    // ==========================================
+    // LOG PANEL
+    // ==========================================
+
+    /**
+     * Initialize log panel
+     */
+    initializeLogPanel() {
+        console.log('📋 Initializing log panel...');
+
+        // Subscribe to log engine
+        if (window.logEngine) {
+            window.logEngine.subscribe((logEntry) => {
+                if (logEntry.type) return; // Skip event objects
+                this.appendLogToUI(logEntry);
+            });
+        }
+
+        // Setup log controls
+        const filterNF = document.getElementById('log-filter-nf');
+        const filterLevel = document.getElementById('log-filter-level');
+        const clearBtn = document.getElementById('btn-clear-logs');
+        const exportBtn = document.getElementById('btn-export-logs');
+        const toggleBtn = document.getElementById('btn-toggle-logs');
+
+        if (filterNF) {
+            filterNF.addEventListener('change', () => this.filterLogs());
+        }
+
+        if (filterLevel) {
+            filterLevel.addEventListener('change', () => this.filterLogs());
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                const logContent = document.getElementById('log-content');
+                if (logContent) {
+                    logContent.innerHTML = '';
+                }
+                if (window.logEngine) {
+                    window.logEngine.clearAllLogs();
+                }
+            });
+        }
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportLogs());
+        }
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => this.toggleLogPanel());
+        }
+
+        console.log('✅ Log panel initialized');
+    }
+
+    /**
+     * Append log entry to UI
+     * @param {Object} logEntry - Log entry object
+     */
+    appendLogToUI(logEntry) {
+        const logContent = document.getElementById('log-content');
+        if (!logContent) return;
+
+        const nf = window.dataStore?.getNFById(logEntry.nfId);
+        const nfName = nf?.name || logEntry.nfId;
+
+        const logDiv = document.createElement('div');
+        logDiv.className = `log-entry ${logEntry.level}`;
+        logDiv.dataset.nfId = logEntry.nfId;
+        logDiv.dataset.level = logEntry.level;
+
+        const time = new Date(logEntry.timestamp).toLocaleTimeString();
+
+        logDiv.innerHTML = `
+            <span class="log-timestamp">[${time}]</span>
+            <span class="log-nf-name">${nfName}</span>
+            <span class="log-level">${logEntry.level}</span>
+            <span class="log-message">${this.escapeHtml(logEntry.message)}</span>
+        `;
+
+        // Add details if present
+        if (logEntry.details && Object.keys(logEntry.details).length > 0) {
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'log-details';
+
+            Object.entries(logEntry.details).forEach(([key, value]) => {
+                const detailLine = document.createElement('div');
+                detailLine.textContent = `${key}: ${JSON.stringify(value)}`;
+                detailsDiv.appendChild(detailLine);
+            });
+
+            logDiv.appendChild(detailsDiv);
+        }
+
+        logContent.appendChild(logDiv);
+
+        // Auto-scroll to bottom
+        logContent.scrollTop = logContent.scrollHeight;
+
+        // Limit displayed logs
+        while (logContent.children.length > 500) {
+            logContent.removeChild(logContent.firstChild);
+        }
+    }
+
+    /**
+     * Filter logs based on selected filters
+     */
+    filterLogs() {
+        const filterNF = document.getElementById('log-filter-nf')?.value || 'all';
+        const filterLevel = document.getElementById('log-filter-level')?.value || 'all';
+        const logContent = document.getElementById('log-content');
+
+        if (!logContent) return;
+
+        const allLogEntries = logContent.querySelectorAll('.log-entry');
+
+        allLogEntries.forEach(entry => {
+            let show = true;
+
+            if (filterNF !== 'all' && entry.dataset.nfId !== filterNF) {
+                show = false;
+            }
+
+            if (filterLevel !== 'all' && entry.dataset.level !== filterLevel) {
+                show = false;
+            }
+
+            entry.style.display = show ? 'flex' : 'none';
+        });
+    }
+
+    /**
+     * Update NF filter dropdown in log panel
+     */
+    updateLogNFFilter() {
+        const select = document.getElementById('log-filter-nf');
+        if (!select) return;
+
+        const currentValue = select.value;
+
+        // Clear options except "All NFs"
+        while (select.options.length > 1) {
+            select.remove(1);
+        }
+
+        // Add option for each NF
+        const allNFs = window.dataStore?.getAllNFs() || [];
+        allNFs.forEach(nf => {
+            const option = document.createElement('option');
+            option.value = nf.id;
+            option.textContent = `${nf.name} (${nf.type})`;
+            select.appendChild(option);
+        });
+
+        // Restore previous selection if valid
+        if (currentValue && [...select.options].some(opt => opt.value === currentValue)) {
+            select.value = currentValue;
+        }
+    }
+
+    /**
+     * Export logs
+     */
+    exportLogs() {
+        if (!window.logEngine) return;
+
+        const format = prompt('Export format (json/csv/txt):', 'txt');
+
+        if (!format) return;
+
+        let content, filename, mimeType;
+
+        if (format.toLowerCase() === 'json') {
+            content = window.logEngine.exportLogsAsJSON();
+            filename = `5g-logs-${Date.now()}.json`;
+            mimeType = 'application/json';
+        } else if (format.toLowerCase() === 'csv') {
+            content = window.logEngine.exportLogsAsCSV();
+            filename = `5g-logs-${Date.now()}.csv`;
+            mimeType = 'text/csv';
+        } else if (format.toLowerCase() === 'txt') {
+            content = window.logEngine.exportLogsAsText();
+            filename = `5g-logs-${Date.now()}.txt`;
+            mimeType = 'text/plain';
+        } else {
+            alert('Invalid format. Use "json", "csv", or "txt"');
+            return;
+        }
+
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        console.log('✅ Logs exported as', format);
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped text
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    /**
+     * Toggle log panel visibility
+     */
+    toggleLogPanel() {
+        const logPanel = document.getElementById('log-panel');
+        const toggleIcon = document.getElementById('toggle-icon');
+
+        if (!logPanel || !toggleIcon) return;
+
+        const isCollapsed = logPanel.classList.contains('collapsed');
+
+        if (isCollapsed) {
+            // Show logs
+            logPanel.classList.remove('collapsed');
+            toggleIcon.textContent = '▼';
+            console.log('📋 Log panel expanded');
+        } else {
+            // Hide logs
+            logPanel.classList.add('collapsed');
+            toggleIcon.textContent = '▲';
+            console.log('📋 Log panel collapsed');
+        }
+
+        // Trigger canvas resize after panel toggle animation completes
+        setTimeout(() => {
+            if (window.canvasRenderer) {
+                window.canvasRenderer.resizeCanvas();
+            }
+        }, 350); // Wait for CSS transition to complete (300ms + buffer)
+    }
+
+    /**
+     * Setup configuration panel toggle
+     */
+    setupConfigPanelToggle() {
+        const toggleBtn = document.getElementById('btn-toggle-config');
+        
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => this.toggleConfigPanel());
+            console.log('✅ Config panel toggle initialized');
+        } else {
+            console.warn('⚠️ Config panel toggle button not found');
+        }
+    }
+
+    /**
+     * Toggle configuration panel visibility
+     */
+    toggleConfigPanel() {
+        const sidebar = document.querySelector('.sidebar-right');
+        const toggleIcon = document.getElementById('config-toggle-icon');
+
+        if (!sidebar || !toggleIcon) return;
+
+        const isCollapsed = sidebar.classList.contains('collapsed');
+
+        if (isCollapsed) {
+            // Show config panel
+            sidebar.classList.remove('collapsed');
+            toggleIcon.textContent = '◀';
+            console.log('⚙️ Config panel expanded');
+        } else {
+            // Hide config panel
+            sidebar.classList.add('collapsed');
+            toggleIcon.textContent = '▶';
+            console.log('⚙️ Config panel collapsed');
+        }
+
+        // Trigger canvas resize after panel toggle animation completes
+        setTimeout(() => {
+            if (window.canvasRenderer) {
+                window.canvasRenderer.resizeCanvas();
+            }
+        }, 350); // Wait for CSS transition to complete (300ms + buffer)
+    }
+
+    /**
+     * Setup keyboard shortcuts
+     */
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + L to toggle logs
+            if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                e.preventDefault();
+                this.toggleLogPanel();
+            }
+
+            // Ctrl/Cmd + K to toggle config panel
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                this.toggleConfigPanel();
+            }
+
+            // F1 or Ctrl/Cmd + H to show help
+            if (e.key === 'F1' || ((e.ctrlKey || e.metaKey) && e.key === 'h')) {
+                e.preventDefault();
+                this.showHelpModal();
+            }
+        });
+
+        console.log('⌨️ Keyboard shortcuts initialized (Ctrl+L: Toggle logs, Ctrl+K: Toggle config, F1/Ctrl+H: Help)');
+    }
+
+
+
+
+    /**
+     * Setup ping troubleshooting handlers
+     * @param {string} nfId - NF ID
+     */
+    setupPingTroubleshootingHandlers(nfId) {
+        const terminalBtn = document.getElementById('btn-open-terminal');
+        const pingHistoryBtn = document.getElementById('btn-ping-history');
+
+        if (terminalBtn) {
+            terminalBtn.addEventListener('click', () => {
+                this.openWindowsTerminal(nfId);
+            });
+        }
+
+        if (pingHistoryBtn) {
+            pingHistoryBtn.addEventListener('click', () => {
+                this.showPingHistory(nfId);
+            });
+        }
+    }
+
+    /**
+     * Execute ping to specific target IP
+     * @param {string} nfId - Source NF ID
+     */
+    async executePingTarget(nfId) {
+        const targetIP = document.getElementById('ping-target-ip')?.value?.trim();
+        
+        if (!targetIP) {
+            alert('Please enter a target IP address');
+            return;
+        }
+
+        // Validate IP format
+        if (!this.isValidIP(targetIP)) {
+            alert('Please enter a valid IP address (e.g., 192.168.1.20)');
+            return;
+        }
+
+        const nf = window.dataStore?.getNFById(nfId);
+        if (!nf) return;
+
+        // Check if ping is already active
+        if (window.pingManager && window.pingManager.isPingActive(nfId)) {
+            alert('Ping is already in progress. Please wait for it to complete.');
+            return;
+        }
+
+        console.log(`🏓 Executing ping from ${nf.name} to ${targetIP}`);
+
+        // Disable button during ping
+        const btn = document.getElementById('btn-ping-target');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '🏓 Pinging...';
+        }
+
+        try {
+            if (window.pingManager) {
+                await window.pingManager.executePing(nfId, targetIP, 4);
+            } else {
+                console.error('❌ PingManager not available');
+                alert('Ping functionality not available');
+            }
+        } catch (error) {
+            console.error('❌ Ping error:', error);
+            if (window.logEngine) {
+                window.logEngine.addLog(nfId, 'ERROR', `Ping failed: ${error.message}`);
+            }
+        } finally {
+            // Re-enable button
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🏓 Ping Target IP';
+            }
+        }
+    }
+
+    /**
+     * Execute ping to all network services
+     * @param {string} nfId - Source NF ID
+     */
+    async executePingNetwork(nfId) {
+        const nf = window.dataStore?.getNFById(nfId);
+        if (!nf) return;
+
+        // Check if ping is already active
+        if (window.pingManager && window.pingManager.isPingActive(nfId)) {
+            alert('Ping is already in progress. Please wait for it to complete.');
+            return;
+        }
+
+        console.log(`📡 Executing network ping from ${nf.name}`);
+
+        // Disable button during ping
+        const btn = document.getElementById('btn-ping-network');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '📡 Scanning Network...';
+        }
+
+        try {
+            if (window.pingManager) {
+                await window.pingManager.pingNetworkServices(nfId);
+            } else {
+                console.error('❌ PingManager not available');
+                alert('Ping functionality not available');
+            }
+        } catch (error) {
+            console.error('❌ Network ping error:', error);
+            if (window.logEngine) {
+                window.logEngine.addLog(nfId, 'ERROR', `Network ping failed: ${error.message}`);
+            }
+        } finally {
+            // Re-enable button
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '📡 Ping Network Services';
+            }
+        }
+    }
+
+    /**
+     * Show ping history for NF
+     * @param {string} nfId - NF ID
+     */
+    showPingHistory(nfId) {
+        const nf = window.dataStore?.getNFById(nfId);
+        if (!nf) return;
+
+        if (!window.pingManager) {
+            alert('Ping functionality not available');
+            return;
+        }
+
+        const history = window.pingManager.getPingHistory(nfId);
+        
+        if (history.length === 0) {
+            alert(`No ping history available for ${nf.name}\n\nExecute some ping commands first to see history.`);
+            return;
+        }
+
+        let historyText = `═══════════════════════════════════\n`;
+        historyText += `PING HISTORY FOR ${nf.name}\n`;
+        historyText += `═══════════════════════════════════\n\n`;
+
+        history.slice(-10).forEach((entry, index) => {
+            const timestamp = new Date(entry.timestamp).toLocaleString();
+            historyText += `${index + 1}. ${timestamp}\n`;
+            historyText += `   Target: ${entry.targetIP}\n`;
+            historyText += `   Result: ${entry.summary.received}/${entry.summary.sent} packets received (${entry.summary.lossPercentage}% loss)\n\n`;
+        });
+
+        historyText += `═══════════════════════════════════\n`;
+        historyText += `Total ping sessions: ${history.length}\n`;
+        historyText += `Showing last ${Math.min(10, history.length)} sessions\n`;
+        historyText += `═══════════════════════════════════`;
+
+        alert(historyText);
+    }
+
+    /**
+     * Open Windows-style terminal for NF
+     * @param {string} nfId - NF ID
+     */
+    openWindowsTerminal(nfId) {
+        const nf = window.dataStore?.getNFById(nfId);
+        if (!nf) return;
+
+        // Create terminal modal
+        this.createTerminalModal(nf);
+    }
+
+    /**
+     * Create Windows-style terminal modal
+     * @param {Object} nf - Network Function
+     */
+    createTerminalModal(nf) {
+        // Remove existing terminal if any
+        const existingTerminal = document.getElementById('windows-terminal-modal');
+        if (existingTerminal) {
+            existingTerminal.remove();
+        }
+
+        // Create terminal modal
+        const terminalModal = document.createElement('div');
+        terminalModal.id = 'windows-terminal-modal';
+        terminalModal.className = 'windows-terminal-modal';
+        
+        terminalModal.innerHTML = `
+            <div class="windows-terminal-window">
+                <div class="windows-terminal-titlebar">
+                    <div class="terminal-title">
+                        <span class="terminal-icon">⬛</span>
+                        Command Prompt - ${nf.name} (${nf.config.ipAddress})
+                    </div>
+                    <div class="terminal-controls">
+                        <button class="terminal-btn close" id="terminal-close">×</button>
+                    </div>
+                </div>
+                <div class="windows-terminal-content" id="terminal-content">
+                    
+                    <div class="terminal-output" id="terminal-output"></div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(terminalModal);
+
+        // Setup terminal functionality
+        this.setupWindowsTerminal(nf, terminalModal);
+
+        // Show terminal with animation
+        setTimeout(() => {
+            terminalModal.classList.add('show');
+        }, 10);
+    }
+
+    /**
+     * Setup Windows terminal functionality
+     * @param {Object} nf - Network Function
+     * @param {HTMLElement} terminalModal - Terminal modal element
+     */
+    setupWindowsTerminal(nf, terminalModal) {
+        const output = document.getElementById('terminal-output');
+        const closeBtn = document.getElementById('terminal-close');
+
+        let commandHistory = [];
+        let historyIndex = -1;
+        let activePromptInput = null;
+        let runningCommand = null; // Track long-running commands
+
+        closeBtn.addEventListener('click', () => {
+            terminalModal.classList.remove('show');
+            setTimeout(() => terminalModal.remove(), 300);
+        });
+
+        terminalModal.addEventListener('click', (e) => {
+            if (e.target === terminalModal) closeBtn.click();
+        });
+
+        output.addEventListener('click', () => {
+            if (activePromptInput) this.focusTerminalPrompt(activePromptInput);
+        });
+
+        const allCmds = [
+            'help', 'ifconfig', 'systeminfo', 'netstat', 'cls', 'clear', 'exit',
+            'ping '
+        ];
+
+        const longestCommonPrefix = (strs) => {
+            if (!strs.length) return '';
+            let prefix = strs[0];
+            for (let i = 1; i < strs.length; i++) {
+                while (!strs[i].startsWith(prefix)) prefix = prefix.slice(0, -1);
+            }
+            return prefix;
+        };
+
+        // Complete only up to the next word boundary beyond what's typed
+        const nextWordCompletion = (typed, full) => {
+            if (full.length <= typed.length) return full;
+            const rest = full.slice(typed.length);
+            const spaceIdx = rest.indexOf(' ');
+            if (spaceIdx === -1) {
+                // Last word - complete it fully
+                return full;
+            }
+            // Complete only up to the next space (one word at a time)
+            return typed + rest.slice(0, spaceIdx + 1); // include trailing space
+        };
+
+        let lastTabTyped = null;
+        let lastTabTime = 0;
+
+        const attachInputHandlers = (promptInput, promptLine) => {
+            promptInput.addEventListener('keydown', async (e) => {
+                // Handle Ctrl+C to stop long-running commands
+                if (e.ctrlKey && e.key === 'c') {
+                    if (runningCommand) {
+                        e.preventDefault();
+                        this.addTerminalLine(output, '^C', 'info');
+                        this.addTerminalLine(output, '', 'blank');
+                        runningCommand = null; // Clear running command
+                        
+                        // Create new prompt
+                        const next = this.createTerminalPromptLine(nf.name);
+                        output.appendChild(next.line);
+                        activePromptInput = next.input;
+                        attachInputHandlers(next.input, next.line);
+                        this.focusTerminalPrompt(next.input);
+                        output.scrollTop = output.scrollHeight;
+                        return;
+                    }
+                }
+
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const typed = promptInput.textContent;
+                    const matches = allCmds.filter(c => c.startsWith(typed) && c !== typed);
+                    if (matches.length === 0) return;
+
+                    const common = longestCommonPrefix(matches);
+                    const completion = nextWordCompletion(typed, common);
+
+                    if (completion.length > typed.length) {
+                        // Fill one word at a time
+                        promptInput.textContent = completion;
+                        this.moveTerminalCaretToEnd(promptInput);
+                        lastTabTyped = completion;
+                        lastTabTime = Date.now();
+                    } else {
+                        // At word boundary — double-Tab shows next word options only
+                        const now = Date.now();
+                        const isDoubleTab = (lastTabTyped === typed && now - lastTabTime < 500);
+                        lastTabTyped = typed;
+                        lastTabTime = now;
+                        if (!isDoubleTab) return;
+
+                        // Extract only the next word from each match
+                        const nextWords = new Set();
+                        matches.forEach(m => {
+                            const rest = m.slice(typed.length);
+                            const spaceIdx = rest.indexOf(' ');
+                            const nextWord = spaceIdx === -1 ? rest : rest.slice(0, spaceIdx);
+                            if (nextWord) nextWords.add(nextWord);
+                        });
+
+                        const blankBefore = document.createElement('div');
+                        blankBefore.className = 'terminal-line terminal-blank';
+                        blankBefore.innerHTML = '&nbsp;';
+                        output.insertBefore(blankBefore, promptLine);
+                        
+                        // Show only unique next words
+                        Array.from(nextWords).sort().forEach(word => {
+                            const s = document.createElement('div');
+                            s.className = 'terminal-line terminal-info';
+                            s.textContent = word;
+                            output.insertBefore(s, promptLine);
+                        });
+                        
+                        const blankAfter = document.createElement('div');
+                        blankAfter.className = 'terminal-line terminal-blank';
+                        blankAfter.innerHTML = '&nbsp;';
+                        output.insertBefore(blankAfter, promptLine);
+                        output.scrollTop = output.scrollHeight;
+                        requestAnimationFrame(() => {
+                            this.focusTerminalPrompt(promptInput);
+                            this.moveTerminalCaretToEnd(promptInput);
+                        });
+                    }
+                    return;
+                }
+
+                lastTabTyped = null;
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const command = promptInput.textContent.trim();
+                    promptLine.classList.remove('terminal-active-prompt');
+                    promptInput.contentEditable = 'false';
+                    promptInput.classList.remove('terminal-live-input');
+
+                    if (command) {
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                        const isLongRunning = await this.processWindowsCommand(nf, command, output);
+                        
+                        if (isLongRunning) {
+                            // Set running command so Ctrl+C can stop it
+                            runningCommand = command;
+                        } else {
+                            // Only create new prompt if command is not long-running
+                            const next = this.createTerminalPromptLine(nf.name);
+                            output.appendChild(next.line);
+                            activePromptInput = next.input;
+                            attachInputHandlers(next.input, next.line);
+                            this.focusTerminalPrompt(next.input);
+                        }
+                    } else {
+                        this.addTerminalLine(output, '', 'blank');
+                        const next = this.createTerminalPromptLine(nf.name);
+                        output.appendChild(next.line);
+                        activePromptInput = next.input;
+                        attachInputHandlers(next.input, next.line);
+                        this.focusTerminalPrompt(next.input);
+                    }
+                    
+                    output.scrollTop = output.scrollHeight;
+
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        promptInput.textContent = commandHistory[historyIndex];
+                        this.moveTerminalCaretToEnd(promptInput);
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        promptInput.textContent = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        promptInput.textContent = '';
+                    }
+                    this.moveTerminalCaretToEnd(promptInput);
+                }
+            });
+        };
+
+        this.addTerminalLine(output, `Connected to ${nf.name} (${nf.config.ipAddress})`, 'info');
+        this.addTerminalLine(output, 'Type "help" for available commands.', 'info');
+        this.addTerminalLine(output, '', 'blank');
+
+        const initialPrompt = this.createTerminalPromptLine(nf.name);
+        output.appendChild(initialPrompt.line);
+        activePromptInput = initialPrompt.input;
+        attachInputHandlers(initialPrompt.input, initialPrompt.line);
+        this.focusTerminalPrompt(initialPrompt.input);
+    }
+
+    /**
+     * Process Windows command
+     * @param {Object} nf - Network Function
+     * @param {string} command - Command to process
+     * @param {HTMLElement} output - Output element
+     * @returns {Promise<boolean>} - Returns true if command is long-running (no prompt should appear)
+     */
+    async processWindowsCommand(nf, command, output) {
+        const cmd = command.toLowerCase().trim();
+        const args = command.split(' ');
+
+        if (cmd === 'help' || cmd === '?') {
+            this.showWindowsHelp(output);
+        } else if (cmd === 'ifconfig') {
+            this.showifconfig(nf, output);
+        } else if (cmd.startsWith('ping ')) {
+            const target = args[1];
+            if (target) {
+                await this.executeWindowsPing(nf, target, output);
+            } else {
+                this.addTerminalLine(output, 'Usage: ping <hostname or IP address>', 'error');
+            }
+        } else if (cmd === 'iperf3 -s' || cmd === 'iperf3 -s -p 5201') {
+            // Long-running iperf3 server command
+            this.addTerminalLine(output, '', 'blank');
+            this.addTerminalLine(output, '-----------------------------------------------------------', 'info');
+            this.addTerminalLine(output, 'Server listening on 5201', 'info');
+            this.addTerminalLine(output, '-----------------------------------------------------------', 'info');
+            this.addTerminalLine(output, '', 'blank');
+            // Return true to indicate this is a long-running command
+            return true;
+        } else if (cmd === 'cls' || cmd === 'clear') {
+            output.innerHTML = '';
+        } else if (cmd === 'exit') {
+            const closeBtn = document.getElementById('terminal-close');
+            if (closeBtn) closeBtn.click();
+        } else if (cmd === 'systeminfo') {
+            this.showSystemInfo(nf, output);
+        } else if (cmd === 'netstat') {
+            this.showNetstat(nf, output);
+        } else if (cmd === '') {
+            // Empty command, just show prompt
+        } else {
+            this.addTerminalLine(output, `'${command}' is not recognized as an internal or external command,`, 'error');
+            this.addTerminalLine(output, 'operable program or batch file.', 'error');
+        }
+
+        this.addTerminalLine(output, '', 'blank');
+        return false; // Normal command, prompt should appear
+    }
+
+    createTerminalPromptLine(nfName) {
+        const line = document.createElement('div');
+        line.className = 'terminal-line terminal-command terminal-prompt-line terminal-active-prompt';
+
+        const prompt = document.createElement('span');
+        prompt.className = 'terminal-prompt';
+        prompt.textContent = `C:\\${nfName}>`;
+
+        const input = document.createElement('span');
+        input.className = 'terminal-live-input';
+        input.contentEditable = 'true';
+        input.spellcheck = false;
+        input.setAttribute('aria-label', 'Terminal command input');
+
+        line.appendChild(prompt);
+        line.appendChild(input);
+        return { line, input };
+    }
+
+    focusTerminalPrompt(input) {
+        if (!input) return;
+        input.focus();
+        this.moveTerminalCaretToEnd(input);
+    }
+
+    moveTerminalCaretToEnd(el) {
+        const selection = window.getSelection();
+        if (!selection) return;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    /**
+     * Add line to terminal output
+     * @param {HTMLElement} output - Output element
+     * @param {string} text - Text to add
+     * @param {string} type - Line type (command, info, error, success, blank)
+     */
+    addTerminalLine(output, text, type = 'normal') {
+        const line = document.createElement('div');
+        line.className = `terminal-line terminal-${type}`;
+        line.innerHTML = text || '&nbsp;';
+        output.appendChild(line);
+        
+        // Auto-scroll to bottom
+        output.scrollTop = output.scrollHeight;
+    }
+
+    /**
+     * Show Windows help
+     * @param {HTMLElement} output - Output element
+     */
+    showWindowsHelp(output) {
+        const helpText = [
+            'Available commands:',
+            '',
+            'help          - Display this help message',
+            'ifconfig      - Display network configuration',
+            'ping <ip>     - Ping a specific IP address',
+            'iperf3 -s     - Start iperf3 server (long-running)',
+            'systeminfo    - Display system information',
+            'netstat       - Display network connections',
+            'cls / clear   - Clear the screen',
+            'exit          - Close this terminal',
+            '',
+            'Tip: Press Tab to autocomplete commands.',
+            ''
+        ];
+
+        helpText.forEach(line => {
+            this.addTerminalLine(output, line, 'info');
+        });
+    }
+
+    /**
+     * Show IP configuration
+     * @param {Object} nf - Network Function
+     * @param {HTMLElement} output - Output element
+     */
+    showifconfig(nf, output) {
+        const lines = [
+            'Windows IP Configuration',
+            '',
+            'Ethernet adapter Local Area Connection:',
+            '',
+            `   Connection-specific DNS Suffix  . : 5g.local`,
+            `   IPv4 Address. . . . . . . . . . . : ${nf.config.ipAddress}`,
+            `   Subnet Mask . . . . . . . . . . . : 255.255.255.0`,
+            `   Default Gateway . . . . . . . . . : 192.168.1.1`,
+            `   DNS Servers . . . . . . . . . . . : 8.8.8.8`,
+            `                                       8.8.4.4`,
+            ''
+        ];
+
+        lines.forEach(line => {
+            this.addTerminalLine(output, line, 'info');
+        });
+    }
+
+    /**
+     * Execute Windows-style ping with subnet restrictions
+     * @param {Object} nf - Network Function
+     * @param {string} target - Target IP or hostname
+     * @param {HTMLElement} output - Output element
+     */
+    async executeWindowsPing(nf, target, output) {
+        // Validate IP
+        if (!this.isValidIP(target)) {
+            this.addTerminalLine(output, `Ping request could not find host ${target}. Please check the name and try again.`, 'error');
+            return;
+        }
+
+        // Check subnet restriction FIRST
+        const sourceNetwork = this.getNetworkFromIP(nf.config.ipAddress);
+        const targetNetwork = this.getNetworkFromIP(target);
+        
+        if (sourceNetwork !== targetNetwork) {
+            this.addTerminalLine(output, `Pinging ${target} with 32 bytes of data:`, 'info');
+            this.addTerminalLine(output, '', 'blank');
+            this.addTerminalLine(output, `PING: transmit failed. General failure.`, 'error');
+            this.addTerminalLine(output, '', 'blank');
+            this.addTerminalLine(output, `Network Error: Cannot reach ${target}`, 'error');
+            this.addTerminalLine(output, `Source subnet: ${sourceNetwork}.0/24`, 'error');
+            this.addTerminalLine(output, `Target subnet: ${targetNetwork}.0/24`, 'error');
+            this.addTerminalLine(output, `Reason: Cross-subnet communication not allowed`, 'error');
+            this.addTerminalLine(output, '', 'blank');
+            this.addTerminalLine(output, `Ping statistics for ${target}:`, 'info');
+            this.addTerminalLine(output, `    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),`, 'info');
+            return;
+        }
+
+        // Initial ping message
+        this.addTerminalLine(output, `Pinging ${target} with 32 bytes of data:`, 'info');
+        this.addTerminalLine(output, '', 'blank');
+
+        // Check if target is reachable (same subnet)
+        const isReachable = this.isTargetReachable(nf, target);
+        const results = [];
+
+        // Send 4 ping packets with 0.5 second delays
+        for (let i = 1; i <= 4; i++) {
+            await this.delay(500); // 0.5 second delay
+
+            if (isReachable) {
+                const responseTime = this.generateResponseTime();
+                const ttl = 255;
+                
+                results.push({
+                    sequence: i,
+                    time: responseTime,
+                    ttl: ttl,
+                    success: true
+                });
+
+                this.addTerminalLine(output, 
+                    `Reply from ${target}: bytes=32 time=${responseTime}ms TTL=${ttl}`, 
+                    'success'
+                );
+            } else {
+                await this.delay(500); // Additional delay for timeout
+                
+                results.push({
+                    sequence: i,
+                    success: false,
+                    timeout: true
+                });
+
+                this.addTerminalLine(output, 'Request timed out.', 'error');
+            }
+        }
+
+        // Show statistics after final delay
+        await this.delay(500);
+        this.showPingStatistics(target, results, output);
+    }
+
+    /**
+     * Show ping statistics
+     * @param {string} target - Target IP
+     * @param {Array} results - Ping results
+     * @param {HTMLElement} output - Output element
+     */
+    showPingStatistics(target, results, output) {
+        const successful = results.filter(r => r.success);
+        const failed = results.filter(r => !r.success);
+        const lossPercentage = Math.round((failed.length / results.length) * 100);
+
+        this.addTerminalLine(output, '', 'blank');
+        this.addTerminalLine(output, `Ping statistics for ${target}:`, 'info');
+        this.addTerminalLine(output, 
+            `    Packets: Sent = ${results.length}, Received = ${successful.length}, Lost = ${failed.length} (${lossPercentage}% loss),`, 
+            'info'
+        );
+
+        if (successful.length > 0) {
+            const times = successful.map(r => r.time);
+            const min = Math.min(...times);
+            const max = Math.max(...times);
+            const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+
+            this.addTerminalLine(output, 'Approximate round trip times in milli-seconds:', 'info');
+            this.addTerminalLine(output, 
+                `    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms`, 
+                'info'
+            );
+        }
+    }
+
+    /**
+     * Show directory listing
+     * @param {HTMLElement} output - Output element
+     */
+    showDirectory(output) {
+        this.addTerminalLine(output, ' Volume in drive C has no label.', 'info');
+        this.addTerminalLine(output, ' Volume Serial Number is 1234-ABCD', 'info');
+        this.addTerminalLine(output, '', 'blank');
+        this.addTerminalLine(output, ' Directory of C:\\', 'info');
+        this.addTerminalLine(output, '01/30/2024  10:00 AM               3842 docker-compose.yml', 'info');
+    }
+
+    /**
+     * Show system information
+     * @param {Object} nf - Network Function
+     * @param {HTMLElement} output - Output element
+     */
+    showSystemInfo(nf, output) {
+        const uptime = window.nfManager?.getServiceUptime(nf) || 'Unknown';
+        const lines = [
+            'Host Name:                 ' + nf.name,
+            'Network Card:              5G Service Interface',
+            '                          Connection Name: Local Area Connection',
+            `                          IP Address:      ${nf.config.ipAddress}`,
+            `                          Port:            ${nf.config.port}`,
+            `                          Protocol:        ${nf.config.httpProtocol}`,
+            `System Up Time:            ${uptime}`,
+            `Service Status:            ${nf.status.toUpperCase()}`,
+            ''
+        ];
+
+        lines.forEach(line => {
+            this.addTerminalLine(output, line, 'info');
+        });
+    }
+
+    /**
+     * Show network statistics
+     * @param {Object} nf - Network Function
+     * @param {HTMLElement} output - Output element
+     */
+    showNetstat(nf, output) {
+        const connections = window.dataStore?.getConnectionsForNF(nf.id) || [];
+        const busConnections = window.dataStore?.getBusConnectionsForNF(nf.id) || [];
+        
+        this.addTerminalLine(output, 'Active Connections', 'info');
+        this.addTerminalLine(output, '', 'blank');
+        this.addTerminalLine(output, '  Proto  Local Address          Foreign Address        State', 'info');
+
+        // Show direct connections
+        connections.forEach(conn => {
+            const otherNfId = conn.sourceId === nf.id ? conn.targetId : conn.sourceId;
+            const otherNf = window.dataStore?.getNFById(otherNfId);
+            if (otherNf) {
+                this.addTerminalLine(output, 
+                    `  TCP    ${nf.config.ipAddress}:${nf.config.port}         ${otherNf.config.ipAddress}:${otherNf.config.port}         ESTABLISHED`, 
+                    'info'
+                );
+            }
+        });
+
+        // Show bus connections
+        busConnections.forEach(busConn => {
+            const bus = window.dataStore?.getBusById(busConn.busId);
+            if (bus) {
+                this.addTerminalLine(output, 
+                    `  TCP    ${nf.config.ipAddress}:${nf.config.port}         ${bus.name}:BUS            ESTABLISHED`, 
+                    'info'
+                );
+            }
+        });
+
+        if (connections.length === 0 && busConnections.length === 0) {
+            this.addTerminalLine(output, '  No active connections.', 'info');
+        }
+
+        this.addTerminalLine(output, '', 'blank');
+    }
+
+    /**
+     * Helper methods for terminal functionality
+     */
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    isTargetReachable(sourceNf, targetIP) {
+        const allNFs = window.dataStore?.getAllNFs() || [];
+        const targetNf = allNFs.find(nf => nf.config.ipAddress === targetIP);
+        
+        if (!targetNf) {
+            return Math.random() < 0.1; // 10% success for unknown IPs
+        }
+
+        const sourceNetwork = this.getNetworkFromIP(sourceNf.config.ipAddress);
+        const targetNetwork = this.getNetworkFromIP(targetIP);
+        
+        if (sourceNetwork !== targetNetwork) {
+            return Math.random() < 0.2; // 20% success for different networks
+        }
+
+        // Check if both services are stable
+        if (sourceNf.status !== 'stable' || targetNf.status !== 'stable') {
+            return Math.random() < 0.3; // 30% success if not both stable
+        }
+
+        return Math.random() < 0.9; // 90% success for stable same-network services
+    }
+
+    getNetworkFromIP(ip) {
+        const parts = ip.split('.');
+        return `${parts[0]}.${parts[1]}.${parts[2]}`;
+    }
+
+    generateResponseTime() {
+        const baseTime = Math.random() * 50 + 1;
+        const variation = (Math.random() - 0.5) * 10;
+        return Math.max(1, Math.round(baseTime + variation));
+    }
+
+    /**
+     * Get next available IP address automatically
+     * @returns {string} Next available IP address
+     */
+    getNextAvailableIP() {
+        const allNFs = window.dataStore?.getAllNFs() || [];
+        const usedIPs = new Set(allNFs.map(nf => nf.config.ipAddress));
+        
+        // Define subnets in priority order
+        const subnets = [
+            '192.168.1', // Core network functions
+            '192.168.2', // User plane functions  
+            '192.168.3', // Edge services
+            '192.168.4'  // Additional services
+        ];
+
+        // Find next available IP in priority order
+        for (const subnet of subnets) {
+            for (let host = 10; host <= 254; host++) {
+                const ip = `${subnet}.${host}`;
+                if (!usedIPs.has(ip)) {
+                    console.log(`🌐 Auto-assigned next available IP: ${ip}`);
+                    return ip;
+                }
+            }
+        }
+
+        // Fallback if all subnets are full
+        const randomSubnet = Math.floor(Math.random() * 254) + 1;
+        const randomHost = Math.floor(Math.random() * 244) + 10;
+        const fallbackIP = `192.168.${randomSubnet}.${randomHost}`;
+        
+        console.warn(`⚠️ Using fallback IP: ${fallbackIP}`);
+        return fallbackIP;
+    }
+
+    /**
+     * Get next available port number automatically
+     * @returns {number} Next available port number
+     */
+    getNextAvailablePort() {
+        const allNFs = window.dataStore?.getAllNFs() || [];
+        const usedPorts = new Set(allNFs.map(nf => nf.config.port));
+        
+        // Find next available port starting from 8080
+        for (let port = 8080; port <= 9999; port++) {
+            if (!usedPorts.has(port)) {
+                console.log(`🔌 Auto-assigned next available port: ${port}`);
+                return port;
+            }
+        }
+
+        // Fallback if all ports are used
+        const randomPort = Math.floor(Math.random() * 1000) + 8000;
+        console.warn(`⚠️ Using fallback port: ${randomPort}`);
+        return randomPort;
+    }
+
+    /**
+     * Validate IP address format
+     * @param {string} ip - IP address to validate
+     * @returns {boolean} True if valid IP
+     */
+    isValidIP(ip) {
+        if (ip === '0.0.0.0') {
+            return false;
+        }
+        const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        if (!ipRegex.test(ip)) {
+            return false;
+        }
+        const parts = ip.split('.').map(Number);
+        if (parts[0] === 0) {
+            return false;
+        }
+        return true;
+    }
+
+    isValidPort(port) {
+        if (typeof port !== 'number' && typeof port !== 'string') {
+            return false;
+        }
+        const portStr = String(port);
+        const portRegex = /^\d{4,6}$/;
+        return portRegex.test(portStr);
+    }
+
+    /**
+     * Get bus at position (for clicking)
+     */
+    getBusAtPosition(x, y) {
+        const allBuses = window.dataStore?.getAllBuses() || [];
+
+        for (const bus of allBuses) {
+            const tolerance = 30; // Increased for easier clicking
+
+            if (bus.orientation === 'horizontal') {
+                if (x >= bus.position.x &&
+                    x <= bus.position.x + bus.length &&
+                    Math.abs(y - bus.position.y) <= tolerance) {
+                    return bus;
+                }
+            } else {
+                if (y >= bus.position.y &&
+                    y <= bus.position.y + bus.length &&
+                    Math.abs(x - bus.position.x) <= tolerance) {
+                    return bus;
+                }
+            }
+        }
+
+        return null;
+    }
+}
