@@ -2,7 +2,7 @@
 
 ### 1.1 Open the SBA Simulator Dashboard
 
-Launch the SBA Simulator Dashboard. This is where all available 5G Core Network Functions (NFs) are visually represented and managed. Think of it as your control room — everything you need to deploy, configure, and monitor the network lives here.
+Launch the SBA Simulator Dashboard. This is where all available 5G Core Network Functions (NFs) are visually represented and managed.
 
 ### 1.2 Verify Initialization
 

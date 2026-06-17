@@ -927,6 +927,22 @@ class UIController {
             this.startNewNetworkFunction(nfType);
         });
 
+        // Input restrictions for IP address
+        const ipInput = document.getElementById('config-ip');
+        if (ipInput) {
+            ipInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            });
+        }
+
+        // Input restrictions for port
+        const portInput = document.getElementById('config-port');
+        if (portInput) {
+            portInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        }
+
         // Cancel button handler
         const cancelBtn = document.getElementById('btn-cancel-nf');
         cancelBtn.addEventListener('click', () => {
@@ -1066,6 +1082,22 @@ class UIController {
             }
         }
 
+        // Input restrictions for IP address
+        const ipInput = document.getElementById('config-ip');
+        if (ipInput) {
+            ipInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            });
+        }
+
+        // Input restrictions for port
+        const portInput = document.getElementById('config-port');
+        if (portInput) {
+            portInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            });
+        }
+
         // Ping troubleshooting handlers
         this.setupPingTroubleshootingHandlers(nf.id);
     }
@@ -1076,11 +1108,12 @@ class UIController {
      */
     startNewNetworkFunction(nfType) {
         const ipAddress = document.getElementById('config-ip')?.value;
-        const port = parseInt(document.getElementById('config-port')?.value);
+        const portInput = document.getElementById('config-port')?.value;
+        const port = parseInt(portInput);
         const httpProtocol = document.getElementById('config-http-protocol')?.value;
 
-        if (!ipAddress || !port) {
-            alert('Please fill all required fields');
+        if (!ipAddress || !portInput) {
+            alert('❌ Please fill all required fields!');
             return;
         }
 
@@ -1088,9 +1121,15 @@ class UIController {
         const count = (window.nfManager?.nfCounters[nfType] || 0) + 1;
         const name = `${nfType}-${count}`;
 
-        // Validate IP address format
+        // Validate IP address
         if (!this.isValidIP(ipAddress)) {
-            alert('❌ Invalid IP address format!\n\nPlease enter a valid IP address (e.g., 192.168.1.20)');
+            alert('❌ Invalid IP address!\n\nRequirements:\n- Must be in format 1.0.0.0 to 255.255.255.255\n- Cannot be 0.0.0.0\n- Only numbers and dots allowed\n\nExample: 192.168.1.20');
+            return;
+        }
+
+        // Validate port
+        if (!this.isValidPort(portInput)) {
+            alert('❌ Invalid port number!\n\nRequirements:\n- Must be 4-6 digits only\n- No special characters or letters allowed\n\nExample: 8080');
             return;
         }
 
@@ -1252,11 +1291,12 @@ class UIController {
      */
     saveNFConfig(nfId) {
         const ipAddress = document.getElementById('config-ip')?.value;
-        const port = parseInt(document.getElementById('config-port')?.value);
+        const portInput = document.getElementById('config-port')?.value;
+        const port = parseInt(portInput);
         const httpProtocol = document.getElementById('config-http-protocol')?.value;
 
-        if (!ipAddress || !port) {
-            alert('Please fill all required fields');
+        if (!ipAddress || !portInput) {
+            alert('❌ Please fill all required fields!');
             return;
         }
 
@@ -1265,9 +1305,15 @@ class UIController {
         if (!nf) return;
         const name = nf.name; // Keep existing name
 
-        // Validate IP address format
+        // Validate IP address
         if (!this.isValidIP(ipAddress)) {
-            alert('❌ Invalid IP address format!\n\nPlease enter a valid IP address (e.g., 192.168.1.20)');
+            alert('❌ Invalid IP address!\n\nRequirements:\n- Must be in format 1.0.0.0 to 255.255.255.255\n- Cannot be 0.0.0.0\n- Only numbers and dots allowed\n\nExample: 192.168.1.20');
+            return;
+        }
+
+        // Validate port
+        if (!this.isValidPort(portInput)) {
+            alert('❌ Invalid port number!\n\nRequirements:\n- Must be 4-6 digits only\n- No special characters or letters allowed\n\nExample: 8080');
             return;
         }
 
@@ -2538,8 +2584,27 @@ class UIController {
      * @returns {boolean} True if valid IP
      */
     isValidIP(ip) {
+        if (ip === '0.0.0.0') {
+            return false;
+        }
         const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-        return ipRegex.test(ip);
+        if (!ipRegex.test(ip)) {
+            return false;
+        }
+        const parts = ip.split('.').map(Number);
+        if (parts[0] === 0) {
+            return false;
+        }
+        return true;
+    }
+
+    isValidPort(port) {
+        if (typeof port !== 'number' && typeof port !== 'string') {
+            return false;
+        }
+        const portStr = String(port);
+        const portRegex = /^\d{4,6}$/;
+        return portRegex.test(portStr);
     }
 
     /**
