@@ -9,4 +9,7 @@ https://www.techrxiv.org/users/691340/articles/1285613-performance-evaluation-of
 3. #### Industrial Open RAN Deployment: A Comparative Performance Evaluation of Open and Commercial gNBs
 https://ieeexplore.ieee.org/abstract/document/11317218
 
+4. #### Wireshark
+https://www.researchgate.net/publication/362645639_Wireshark
+
 </div>
