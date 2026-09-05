@@ -18,9 +18,11 @@ The 5G New Radio (NR) system requires proper connectivity between the Radio Acce
 - UPF: Routes and forwards user data packets
 - SMF: Manages PDU sessions
 
+As illustrated in **Figure 1**, the high-level architecture of the 5G system establishes connectivity by linking the gNB in the RAN to the AMF, UPF, and SMF in the 5G Core. This diagram highlights the primary interfaces involved in managing both control and user plane traffic.
+
 <img src="images/fig1.svg" alt="5G System Architecture" width="45%">
 
-*Fig: 5G System Architecture - NG Setup and N3 Interface*
+*Figure 1: 5G System Architecture - NG Setup and N3 Interface*
 
 ### 2.2 NG Interface Components
 
@@ -34,9 +36,11 @@ The 5G New Radio (NR) system requires proper connectivity between the Radio Acce
 - Uses GTP-U (GPRS Tunneling Protocol - User Plane)
 - Carries actual user data
 
+To better visualize these connections, **Figure 2** breaks down the NG interface into its two primary components: the NG-C (control plane) connecting the gNB to the AMF via NGAP, and the NG-U/N3 (user plane) establishing the path between the gNB and the UPF via GTP-U.
+
 <img src="images/fig2.svg" alt="NG Interface Components" width="45%">
 
-*Fig: NG Interface Components*
+*Figure 2: NG Interface Components*
 
 ## 3. NG Setup Procedure
 
@@ -51,9 +55,11 @@ The NG Setup procedure is the first signaling exchange between gNB and AMF that 
 
 ### 3.2 NG Setup Message Flow
 
+The initial signaling flow between the gNB and the AMF is demonstrated in **Figure 3**. The sequence outlines the step-by-step exchange required to establish control plane connectivity, starting from the underlying SCTP association to the successful setup of the NGAP connection.
+
 <img src="images/fig3.svg" alt="NG Setup Procedure Sequence" width="45%">
 
-*Fig: NG Setup Procedure Sequence*
+*Figure 3: NG Setup Procedure Sequence*
 
 **Process Steps:**
 - SCTP association established between gNB and AMF
@@ -153,9 +159,11 @@ NG SETUP RESPONSE
 
 ### 3.5 NGAP Protocol Stack
 
+**Figure 4** details the protocol stack used for NG-C signaling. As shown, NGAP serves as the application layer operating over SCTP, which provides reliable transport on top of standard IP and Ethernet network layers.
+
 <img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
 
-*Fig: NGAP Protocol Stack*
+*Figure 4: NGAP Protocol Stack*
 
 **Layers:**
 - **NGAP**: Application layer for NG-C signaling
@@ -163,7 +171,7 @@ NG SETUP RESPONSE
 - **IP**: Network layer routing
 - **Ethernet**: Physical connectivity
 
-## 4. N3 Interface and ActivationNG Setup Procedure
+## 4. N3 Interface and Activation
 
 ### 4.1 N3 Interface Overview
 
@@ -179,17 +187,19 @@ The N3 interface is the user plane interface between gNB and UPF.
 - Bidirectional (uplink and downlink)
 - Separate tunnel for each PDU session
 
+**Figure 5** highlights the position of the N3 interface within the overall 5G network topology. As depicted, the N3 tunnel acts as the dedicated user plane path directly linking the gNB to the UPF, bypassing the control plane nodes.
+
 <img src="images/fig5.svg" alt="N3 Interface Position in 5G Network" width="45%">
 
-*Fig: N3 Interface Position in 5G Network*
+*Figure 5: N3 Interface Position in 5G Network*
 
 ### 4.2 N3 Activation Through PDU Session Setup
 
-N3 activation occurs during PDU Session Resource Setup.
+The N3 activation process occurs seamlessly during the PDU Session Resource Setup. **Figure 6** outlines the required signaling flow, demonstrating how this procedure successfully configures the necessary GTP-U tunnels for user data transmission between the gNB and UPF.
 
 <img src="images/fig6.svg" alt="N3 Activation via PDU Session Setup" width="45%">
 
-*Fig: N3 Activation via PDU Session Setup*
+*Figure 6: N3 Activation via PDU Session Setup*
 
 ### 4.3 PDU Session Resource Setup Request
 
@@ -266,9 +276,11 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 ### 4.5 N3 Protocol Stack
 
+To understand how data is transported across the core network, **Figure 7** depicts the protocol stack for the N3 user plane interface. It illustrates how original user IP packets are encapsulated within GTP-U and UDP headers before physical transmission.
+
 <img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="40%">
 
-*Fig: N3 Interface Protocol Stack*
+*Figure 7: N3 Interface Protocol Stack*
 
 **Layers:**
 - **User Data**: User IP packets
@@ -281,9 +293,11 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 #### 4.6.1 Uplink Flow (UE → Data Network)
 
+**Figure 8** traces the path of an uplink data packet originating from the UE. The diagram visualizes the encapsulation process that occurs at the gNB, as well as the subsequent decapsulation at the UPF before the packet finally reaches the external Data Network.
+
 <img src="images/fig8.svg" alt="Uplink Data Flow Through N3" width="45%">
 
-*Fig: Uplink Data Flow Through N3*
+*Figure 8: Uplink Data Flow Through N3*
 
 **Steps:**
 1. UE sends IP packet (e.g., to 8.8.8.8)
@@ -299,9 +313,11 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 #### 4.6.2 Downlink Flow (Data Network → UE)
 
+In the reverse direction, **Figure 9** illustrates the path for downlink data. It details how the UPF encapsulates incoming packets arriving from the Data Network, forwarding them via the established N3 tunnel to the gNB for final delivery over the radio interface to the UE.
+
 <img src="images/fig9.svg" alt="Downlink Data Flow Through N3" width="45%">
 
-*Fig: Downlink Data Flow Through N3*
+*Figure 9: Downlink Data Flow Through N3*
 
 **Steps:**
 1. Data Network sends response (e.g., from 8.8.8.8)
@@ -328,9 +344,11 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 ### 5.1 Dependency
 
+**Figure 10** clarifies the critical dependency between the control plane and user plane setup processes. It emphasizes a fundamental rule of 5G architecture: the NG Setup (control plane) must be fully and successfully established before the N3 interface (user plane) can be activated.
+
 <img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="35%">
 
-*Fig: NG Setup to N3 Activation Flow*
+*Figure 10: NG Setup to N3 Activation Flow*
 
 **Key Points:**
 - NG Setup is prerequisite: Must complete before N3 can be activated
@@ -388,3 +406,117 @@ PDU SESSION RESOURCE SETUP RESPONSE
 - **NG Setup**: Foundation for all signaling; enables UE connection
 - **N3 Interface**: Carries actual user traffic; impacts user experience
 - **Together**: Enable complete 5G connectivity (control + data)
+
+## 7. Sample Configuration Details
+ 
+Real deployments require gNB and AMF configuration files that define the parameters exchanged during NG Setup and N3 activation. Below are representative configuration snippets (Amarisoft/open5gs-style) illustrating how the Information Elements from Sections 3 and 4 map to actual config entries.
+ 
+### 7.1 gNB Configuration (relevant to NG Setup)
+ 
+```yaml
+# gnb.yaml (excerpt)
+gnb_id: 0x0012345          # Global RAN Node ID -> gNB ID
+gnb_id_bits: 28
+ 
+plmn_list:
+  - plmn: "00101"           # MCC=001, MNC=01
+    tac: 100                # Tracking Area Code (decimal for TAC 000064H)
+    reserved: false
+ 
+slicing:
+  - sst: 1                  # S-NSSAI SST for eMBB, matches TAI Slice Support List
+    sd: null
+ 
+amf_list:
+  - addr: 10.0.0.10          # AMF IP address for SCTP association
+    port: 38412               # NGAP/SCTP port
+    bind_addr: 10.0.0.185     # gNB local bind address
+ 
+paging_drx: 128              # Default Paging DRX (v128)
+ 
+ran_node_name: "gnb0012345"  # RAN Node Name IE
+```
+ 
+### 7.2 AMF Configuration (relevant to NG Setup Response)
+ 
+```yaml
+# amf.yaml (excerpt)
+amf_name: "amarisoft.amf.5gc.mnc001.mcc001.3gppnetwork.org"
+ 
+guami:
+  plmn_id: "00101"
+  amf_region_id: 128         # 0x80
+  amf_set_id: 4
+  amf_pointer: 1
+ 
+relative_capacity: 50        # Relative AMF Capacity (load balancing)
+ 
+plmn_support_list:
+  - plmn_id: "00101"
+    s_nssai:
+      - sst: 1
+ 
+ngap:
+  bind_addr: 10.0.0.10
+  port: 38412
+```
+ 
+### 7.3 SMF/UPF Configuration (relevant to N3 Activation)
+ 
+```yaml
+# upf.yaml (excerpt)
+n3_interface:
+  addr: 10.0.0.162            # UPF IP used in UL NG-U UP TNL Information
+  gtpu_port: 2152
+ 
+pdu_session_defaults:
+  pdu_session_type: IPv4
+  qos:
+    qfi: 1
+    five_qi: 9                # Default bearer 5QI
+ 
+teid_pool:
+  ul_teid_range: "0x40000000-0x4FFFFFFF"   # Example: 4f485cc3 falls in this range
+  dl_teid_range: "0xA0000000-0xAFFFFFFF"   # Example: a968d0db falls in this range
+```
+ 
+**Mapping to earlier sections:** the `plmn_list`/`slicing` entries in the gNB config directly populate the NG SETUP REQUEST's *Global RAN Node ID* and *Supported TA List*; the AMF's `guami`/`relative_capacity` entries populate the NG SETUP RESPONSE; and the UPF's `n3_interface`/`teid_pool` values are what get returned as *Transport Layer Address* and *GTP-TEID* in the PDU Session Resource Setup exchange (Section 4.3–4.4).
+ 
+## 8. NAS Signaling Overview
+ 
+### 8.1 What is NAS?
+ 
+**NAS (Non-Access Stratum)** is the signaling layer between the **UE and AMF** that handles mobility and session-related procedures — as distinct from **AS (Access Stratum)** signaling, which operates between the UE and the RAN (gNB).
+ 
+Unlike NGAP, which is a gNB–AMF protocol, NAS messages are generated by the UE and AMF and are simply **carried transparently through the gNB** inside NGAP containers. The gNB does not interpret NAS content; it only relays it.
+ 
+### 8.2 Relationship to NG Setup and N3
+ 
+- **NG Setup** must complete first — it establishes the NGAP/SCTP transport over which NAS messages can be carried between gNB and AMF.
+- Once NG-C is up, the UE's NAS messages (e.g., Registration Request) are encapsulated inside NGAP **Initial UE Message** / **Uplink NAS Transport** procedures and forwarded by the gNB to the AMF.
+- **N3 activation** (Section 4) is itself triggered by a NAS-level procedure: the PDU Session Establishment Request is a NAS message from UE to SMF (via AMF), and the resulting **PDU Session Resource Setup** exchange over NGAP is what actually configures the N3 GTP-U tunnel.
+
+### 8.3 Key NAS Procedures
+ 
+- **Registration Management (5GMM)**
+  - Registration Request / Accept / Reject
+  - De-registration
+- **Session Management (5GSM)**
+  - PDU Session Establishment Request / Accept / Reject (see the Session Management document, Section 4)
+  - PDU Session Modification / Release
+- **Authentication and Security**
+  - Authentication Request/Response (5G-AKA)
+  - Security Mode Command/Complete
+  
+### 8.4 NAS Transport Example
+ 
+```
+NGAP: INITIAL UE MESSAGE
+{
+    RAN UE NGAP ID: 1
+    NAS-PDU: <encrypted NAS Registration Request>
+    User Location Information: { TAC: 000064, PLMN: 00101 }
+}
+```
+ 
+The `NAS-PDU` field is opaque to the gNB — it is decoded only by the AMF (and, for security-protected messages, decrypted after the Security Mode procedure completes). This separation of AS (NGAP, radio) and NAS (UE↔AMF/SMF) signaling is what allows the gNB to remain a relatively simple relay point while all mobility and session intelligence stays in the 5G Core.
