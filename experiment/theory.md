@@ -1,10 +1,13 @@
+> **Audio Explanation:** For a comprehensive understanding of these theoretical concepts, you can listen on YouTube. 
+> [**Click here to listen the audio**](https://youtu.be/6Nb4IPH8EtA)
+
+
 ## 1. Introduction
 
 The 5G New Radio (NR) system requires proper connectivity between the Radio Access Network (RAN) and the 5G Core Network (5GC). This experiment focuses on two fundamental procedures:
 
 - **NG Setup Procedure**: Establishes the control plane connection between gNodeB (gNB) and Access and Mobility Management Function (AMF)
 - **N3 Interface Activation**: Enables user plane data transmission between gNB and User Plane Function (UPF)
-
 
 ## 2. 5G System Architecture Overview
 
@@ -20,7 +23,9 @@ The 5G New Radio (NR) system requires proper connectivity between the Radio Acce
 
 As illustrated in **Figure 1**, the high-level architecture of the 5G system establishes connectivity by linking the gNB in the RAN to the AMF, UPF, and SMF in the 5G Core. This diagram highlights the primary interfaces involved in managing both control and user plane traffic.
 
-<img src="images/fig1.svg" alt="5G System Architecture" width="45%">
+<div align="center">
+  <img src="images/fig1.svg" alt="5G System Architecture" width="45%">
+</div>
 
 *Figure 1: 5G System Architecture - NG Setup and N3 Interface*
 
@@ -38,7 +43,9 @@ As illustrated in **Figure 1**, the high-level architecture of the 5G system est
 
 To better visualize these connections, **Figure 2** breaks down the NG interface into its two primary components: the NG-C (control plane) connecting the gNB to the AMF via NGAP, and the NG-U/N3 (user plane) establishing the path between the gNB and the UPF via GTP-U.
 
-<img src="images/fig2.svg" alt="NG Interface Components" width="45%">
+<div align="center">
+  <img src="images/fig2.svg" alt="NG Interface Components" width="45%">
+</div>
 
 *Figure 2: NG Interface Components*
 
@@ -57,7 +64,9 @@ The NG Setup procedure is the first signaling exchange between gNB and AMF that 
 
 The initial signaling flow between the gNB and the AMF is demonstrated in **Figure 3**. The sequence outlines the step-by-step exchange required to establish control plane connectivity, starting from the underlying SCTP association to the successful setup of the NGAP connection.
 
-<img src="images/fig3.svg" alt="NG Setup Procedure Sequence" width="45%">
+<div align="center">
+  <img src="images/fig3.svg" alt="NG Setup Procedure Sequence" width="45%">
+</div>
 
 *Figure 3: NG Setup Procedure Sequence*
 
@@ -161,7 +170,9 @@ NG SETUP RESPONSE
 
 **Figure 4** details the protocol stack used for NG-C signaling. As shown, NGAP serves as the application layer operating over SCTP, which provides reliable transport on top of standard IP and Ethernet network layers.
 
-<img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
+<div align="center">
+  <img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
+</div>
 
 *Figure 4: NGAP Protocol Stack*
 
@@ -189,7 +200,9 @@ The N3 interface is the user plane interface between gNB and UPF.
 
 **Figure 5** highlights the position of the N3 interface within the overall 5G network topology. As depicted, the N3 tunnel acts as the dedicated user plane path directly linking the gNB to the UPF, bypassing the control plane nodes.
 
-<img src="images/fig5.svg" alt="N3 Interface Position in 5G Network" width="45%">
+<div align="center">
+  <img src="images/fig5.svg" alt="N3 Interface Position in 5G Network" width="45%">
+</div>
 
 *Figure 5: N3 Interface Position in 5G Network*
 
@@ -197,7 +210,9 @@ The N3 interface is the user plane interface between gNB and UPF.
 
 The N3 activation process occurs seamlessly during the PDU Session Resource Setup. **Figure 6** outlines the required signaling flow, demonstrating how this procedure successfully configures the necessary GTP-U tunnels for user data transmission between the gNB and UPF.
 
-<img src="images/fig6.svg" alt="N3 Activation via PDU Session Setup" width="45%">
+<div align="center">
+  <img src="images/fig6.svg" alt="N3 Activation via PDU Session Setup" width="45%">
+</div>
 
 *Figure 6: N3 Activation via PDU Session Setup*
 
@@ -278,7 +293,9 @@ PDU SESSION RESOURCE SETUP RESPONSE
 
 To understand how data is transported across the core network, **Figure 7** depicts the protocol stack for the N3 user plane interface. It illustrates how original user IP packets are encapsulated within GTP-U and UDP headers before physical transmission.
 
-<img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="40%">
+<div align="center">
+  <img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="40%">
+</div>
 
 *Figure 7: N3 Interface Protocol Stack*
 
@@ -295,7 +312,9 @@ To understand how data is transported across the core network, **Figure 7** depi
 
 **Figure 8** traces the path of an uplink data packet originating from the UE. The diagram visualizes the encapsulation process that occurs at the gNB, as well as the subsequent decapsulation at the UPF before the packet finally reaches the external Data Network.
 
-<img src="images/fig8.svg" alt="Uplink Data Flow Through N3" width="45%">
+<div align="center">
+  <img src="images/fig8.svg" alt="Uplink Data Flow Through N3" width="45%">
+</div>
 
 *Figure 8: Uplink Data Flow Through N3*
 
@@ -315,7 +334,9 @@ To understand how data is transported across the core network, **Figure 7** depi
 
 In the reverse direction, **Figure 9** illustrates the path for downlink data. It details how the UPF encapsulates incoming packets arriving from the Data Network, forwarding them via the established N3 tunnel to the gNB for final delivery over the radio interface to the UE.
 
-<img src="images/fig9.svg" alt="Downlink Data Flow Through N3" width="45%">
+<div align="center">
+  <img src="images/fig9.svg" alt="Downlink Data Flow Through N3" width="45%">
+</div>
 
 *Figure 9: Downlink Data Flow Through N3*
 
@@ -346,7 +367,9 @@ In the reverse direction, **Figure 9** illustrates the path for downlink data. I
 
 **Figure 10** clarifies the critical dependency between the control plane and user plane setup processes. It emphasizes a fundamental rule of 5G architecture: the NG Setup (control plane) must be fully and successfully established before the N3 interface (user plane) can be activated.
 
-<img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="35%">
+<div align="center">
+  <img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="35%">
+</div>
 
 *Figure 10: NG Setup to N3 Activation Flow*
 
