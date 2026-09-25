@@ -26,9 +26,8 @@ As illustrated in **Figure 1**, the high-level architecture of the 5G system est
 
 <div align="center">
   <img src="images/fig1.svg" alt="5G System Architecture" width="45%">
+  <p><em>Figure 1: 5G System Architecture - NG Setup and N3 Interface</em></p>
 </div>
-
-*Figure 1: 5G System Architecture - NG Setup and N3 Interface*
 
 ### 2.2 NG Interface Components
 
@@ -46,9 +45,8 @@ To better visualize these connections, **Figure 2** breaks down the NG interface
 
 <div align="center">
   <img src="images/fig2.svg" alt="NG Interface Components" width="45%">
+  <p><em>Figure 2: NG Interface Components</em></p>
 </div>
-
-*Figure 2: NG Interface Components*
 
 ## 3. NG Setup Procedure
 
@@ -67,9 +65,8 @@ The initial signaling flow between the gNB and the AMF is demonstrated in **Figu
 
 <div align="center">
   <img src="images/fig3.svg" alt="NG Setup Procedure Sequence" width="45%">
+  <p><em>Figure 3: NG Setup Procedure Sequence</em></p>
 </div>
-
-*Figure 3: NG Setup Procedure Sequence*
 
 **Process Steps:**
 - SCTP association established between gNB and AMF
@@ -173,9 +170,8 @@ NG SETUP RESPONSE
 
 <div align="center">
   <img src="images/fig4.svg" alt="NGAP Protocol Stack" width="45%">
+  <p><em>Figure 4: NGAP Protocol Stack</em></p>
 </div>
-
-*Figure 4: NGAP Protocol Stack*
 
 **Layers:**
 - **NGAP**: Application layer for NG-C signaling
@@ -203,9 +199,8 @@ The N3 interface is the user plane interface between gNB and UPF.
 
 <div align="center">
   <img src="images/fig5.svg" alt="N3 Interface Position in 5G Network" width="45%">
+  <p><em>Figure 5: N3 Interface Position in 5G Network</em></p>
 </div>
-
-*Figure 5: N3 Interface Position in 5G Network*
 
 ### 4.2 N3 Activation Through PDU Session Setup
 
@@ -213,9 +208,8 @@ The N3 activation process occurs seamlessly during the PDU Session Resource Setu
 
 <div align="center">
   <img src="images/fig6.svg" alt="N3 Activation via PDU Session Setup" width="45%">
+  <p><em>Figure 6: N3 Activation via PDU Session Setup</em></p>
 </div>
-
-*Figure 6: N3 Activation via PDU Session Setup*
 
 ### 4.3 PDU Session Resource Setup Request
 
@@ -296,9 +290,8 @@ To understand how data is transported across the core network, **Figure 7** depi
 
 <div align="center">
   <img src="images/fig7.svg" alt="N3 Interface Protocol Stack" width="40%">
+  <p><em>Figure 7: N3 Interface Protocol Stack</em></p>
 </div>
-
-*Figure 7: N3 Interface Protocol Stack*
 
 **Layers:**
 - **User Data**: User IP packets
@@ -315,9 +308,8 @@ To understand how data is transported across the core network, **Figure 7** depi
 
 <div align="center">
   <img src="images/fig8.svg" alt="Uplink Data Flow Through N3" width="45%">
+  <p><em>Figure 8: Uplink Data Flow Through N3</em></p>
 </div>
-
-*Figure 8: Uplink Data Flow Through N3*
 
 **Steps:**
 1. UE sends IP packet (e.g., to 8.8.8.8)
@@ -337,9 +329,8 @@ In the reverse direction, **Figure 9** illustrates the path for downlink data. I
 
 <div align="center">
   <img src="images/fig9.svg" alt="Downlink Data Flow Through N3" width="45%">
+  <p><em>Figure 9: Downlink Data Flow Through N3</em></p>
 </div>
-
-*Figure 9: Downlink Data Flow Through N3*
 
 **Steps:**
 1. Data Network sends response (e.g., from 8.8.8.8)
@@ -370,9 +361,8 @@ In the reverse direction, **Figure 9** illustrates the path for downlink data. I
 
 <div align="center">
   <img src="images/fig10.svg" alt="NG Setup to N3 Activation Flow" width="35%">
+  <p><em>Figure 10: NG Setup to N3 Activation Flow</em></p>
 </div>
-
-*Figure 10: NG Setup to N3 Activation Flow*
 
 **Key Points:**
 - NG Setup is prerequisite: Must complete before N3 can be activated
